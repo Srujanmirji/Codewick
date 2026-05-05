@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import Hls from "hls.js";
 import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
+import { ToastContainer } from "@/components/ui/Toast";
 
 export default function DashboardLayout({
   children,
@@ -17,23 +18,34 @@ export default function DashboardLayout({
     const video = videoRef.current;
     if (!video) return;
 
+    const playVideo = async () => {
+      try {
+        if (video.paused) {
+          await video.play();
+        }
+      } catch (err: any) {
+        // Silently handle AbortError which occurs when play is interrupted by browser power saving
+        if (err.name !== 'AbortError') {
+          console.warn("Video playback failed:", err);
+        }
+      }
+    };
+
     if (Hls.isSupported()) {
       const hls = new Hls();
       hls.loadSource(hlsUrl);
       hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(e => console.error("Error playing video:", e));
-      });
+      hls.on(Hls.Events.MANIFEST_PARSED, playVideo);
 
       return () => {
         hls.destroy();
       };
     } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      // For Safari native HLS support
       video.src = hlsUrl;
-      video.addEventListener("loadedmetadata", () => {
-        video.play().catch(e => console.error("Error playing video:", e));
-      });
+      video.addEventListener("loadedmetadata", playVideo);
+      return () => {
+        video.removeEventListener("loadedmetadata", playVideo);
+      };
     }
   }, [hlsUrl]);
 
@@ -46,6 +58,8 @@ export default function DashboardLayout({
         loop
         muted
         playsInline
+        preload="auto"
+        disablePictureInPicture
         className="absolute inset-0 w-full h-full object-cover z-0 opacity-40 mix-blend-screen pointer-events-none"
       />
 
@@ -58,6 +72,7 @@ export default function DashboardLayout({
           </main>
         </div>
       </div>
+      <ToastContainer />
     </div>
   );
 }
