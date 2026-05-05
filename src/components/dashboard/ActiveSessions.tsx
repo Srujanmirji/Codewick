@@ -50,10 +50,10 @@ export function ActiveSessions({ sessions }: { sessions: Session[] }) {
                   {isUpcoming ? `In ${formatDistanceToNow(sessionDate)}` : "Starting now"}
                 </span>
                 <div className="flex gap-2 opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
-                  <button className="text-xs bg-red-400/10 hover:bg-red-400/20 text-red-400/80 px-3 py-1.5 rounded-lg flex items-center gap-1 border border-transparent hover:border-red-400/20 transition-colors">
+                  <button className="text-[10px] bg-red-400/5 hover:bg-red-400/10 text-red-400/80 px-4 py-1.5 rounded-full flex items-center gap-1.5 border border-white/5 hover:border-red-400/20 transition-all uppercase tracking-wider font-semibold">
                     <XCircle className="w-3.5 h-3.5" /> Cancel
                   </button>
-                  <button className="text-xs glass-button px-3 py-1.5 rounded-lg flex items-center gap-1 text-cyan-50">
+                  <button className="text-[10px] glass-button-primary px-4 py-1.5 rounded-full flex items-center gap-1.5 text-white/95 uppercase tracking-wider font-semibold">
                     Join Session
                   </button>
                 </div>

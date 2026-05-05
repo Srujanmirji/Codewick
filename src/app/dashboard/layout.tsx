@@ -19,11 +19,11 @@ export default function DashboardLayout({
         <source src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260503_101827_abebfeec-f243-466b-b494-7f6814c0fbbf.mp4" type="video/mp4" />
       </video>
 
-      <div className="z-10 flex h-full w-full p-4 gap-4">
+      <div className="z-10 flex h-full w-full p-6 gap-6">
         <Sidebar />
-        <div className="flex flex-col flex-1 overflow-hidden">
+        <div className="flex flex-col flex-1 overflow-hidden gap-6">
           <Navbar />
-          <main className="flex-1 overflow-y-auto pt-4 pb-8 px-2 custom-scrollbar">
+          <main className="flex-1 overflow-y-auto pb-12 custom-scrollbar pr-4">
             {children}
           </main>
         </div>

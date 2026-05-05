@@ -36,12 +36,12 @@ export function Sidebar() {
   return (
     <motion.aside
       animate={{ width: sidebarOpen ? 260 : 80 }}
-      className="h-full liquid-glass-static flex flex-col relative flex-shrink-0 transition-all duration-300 z-50 rounded-[24px]"
+      className="h-full liquid-glass-static flex flex-col relative flex-shrink-0 transition-all duration-300 z-50 overflow-visible"
     >
       {/* Toggle Button */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-8 liquid-glass rounded-full p-1.5 text-white/40 hover:text-white/95 z-50 transition-colors"
+        className="absolute -right-3 top-8 glass-button w-8 h-8 flex items-center justify-center text-white/40 hover:text-white/95 z-50 transition-colors"
       >
         {sidebarOpen ? <ChevronLeft size={16} /> : <ChevronRight size={16} />}
       </button>
@@ -49,14 +49,14 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-20 flex items-center px-6 overflow-hidden mt-2">
         <div className="flex items-center gap-3 w-48">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-400 to-indigo-500 flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(34,213,238,0.3)]">
-            <span className="font-bold text-white/95 font-fustat text-lg">S</span>
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/20 to-indigo-500/20 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_rgba(34,213,238,0.15)]">
+            <span className="font-bold text-white/95 font-fustat text-xl">S</span>
           </div>
           {sidebarOpen && (
             <motion.span 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="font-fustat font-bold text-xl text-white/95 whitespace-nowrap"
+              className="font-fustat font-bold text-xl text-white/95 whitespace-nowrap tracking-tight"
             >
               SkillSwap
             </motion.span>
@@ -65,26 +65,26 @@ export function Sidebar() {
       </div>
 
       {/* Nav Links */}
-      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-2 custom-scrollbar">
+      <div className="flex-1 overflow-y-auto py-4 px-3 flex flex-col gap-1.5 custom-scrollbar">
         {NAV_ITEMS.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link key={item.name} href={item.href}>
               <div
                 className={cn(
-                  "flex items-center gap-4 px-3 py-3 rounded-xl transition-all duration-300 group relative",
+                  "flex items-center gap-4 px-3 py-3 rounded-2xl transition-all duration-300 group relative cursor-pointer",
                   isActive 
-                    ? "text-cyan-400 bg-cyan-400/5" 
+                    ? "text-cyan-400 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10" 
                     : "text-white/60 hover:bg-white/5 hover:text-white/95"
                 )}
                 title={!sidebarOpen ? item.name : undefined}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-cyan-400 rounded-r-full shadow-[0_0_8px_rgba(34,213,238,0.5)]"></div>
+                  <div className="absolute left-1.5 w-1 h-5 bg-cyan-400 rounded-full shadow-[0_0_10px_rgba(34,213,238,0.6)]"></div>
                 )}
-                <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300", isActive ? "drop-shadow-[0_0_5px_rgba(34,213,238,0.3)]" : "group-hover:text-white/95")} />
+                <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300 ml-1", isActive ? "drop-shadow-[0_0_8px_rgba(34,213,238,0.4)]" : "group-hover:text-white/95")} />
                 {sidebarOpen && (
-                  <span className="font-inter font-medium whitespace-nowrap">
+                  <span className="font-inter font-medium whitespace-nowrap text-sm">
                     {item.name}
                   </span>
                 )}
