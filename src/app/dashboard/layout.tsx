@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Hls from "hls.js";
 import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
@@ -11,6 +13,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsUrl = "https://stream.mux.com/r6pXRAJb3005XEEbl1hYU1x01RFJDSn7KQApwNGgAHHbU.m3u8";
 
@@ -48,6 +52,13 @@ export default function DashboardLayout({
       };
     }
   }, [hlsUrl]);
+
+  // Onboarding guard: redirect if user hasn't completed onboarding
+  useEffect(() => {
+    if (status === "authenticated" && !(session?.user as any)?.onboardingComplete) {
+      router.replace("/onboarding");
+    }
+  }, [status, session, router]);
 
   return (
     <div className="flex h-screen w-full relative overflow-hidden bg-black">
