@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
@@ -13,8 +15,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid transfer details' }, { status: 400 });
     }
 
-    // Mock sender (in real app, get from session)
-    const sender = await User.findOne({ email: 'alex@skillswap.local' });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const sender = await User.findOne({ email: session.user.email });
     const receiver = await User.findOne({ email: receiverEmail });
 
     if (!sender) return NextResponse.json({ error: 'Sender not found' }, { status: 404 });
