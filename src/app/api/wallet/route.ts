@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
@@ -6,27 +8,16 @@ import Transaction from '@/models/Transaction';
 export async function GET() {
   try {
     await connectDB();
+    const session = await getServerSession(authOptions);
 
-    // In a real app, you would get the user ID from the session/auth
-    // For now, we'll fetch the first user or create a mock one if none exists
-    let user = await User.findOne();
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const user = await User.findOne({ email: session.user.email });
     
     if (!user) {
-      user = await User.create({
-        name: 'Alex Developer',
-        email: 'alex@skillswap.local',
-        timeCredits: 2,
-        trustScore: 50,
-        trustLevel: 'Newbie'
-      });
-      
-      // Initial bonus transaction
-      await Transaction.create({
-        receiverId: user._id,
-        amount: 2,
-        type: 'bonus',
-        description: 'Initial onboarding bonus',
-      });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const transactions = await Transaction.find({

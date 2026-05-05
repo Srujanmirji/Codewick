@@ -8,12 +8,12 @@ import Session from '@/models/Session';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
     const { status } = await request.json(); // 'accepted' or 'rejected'
-    const requestId = params.id;
+    const { id: requestId } = await params;
 
     const skillRequest = await SkillRequest.findById(requestId);
     if (!skillRequest) return NextResponse.json({ error: 'Request not found' }, { status: 404 });

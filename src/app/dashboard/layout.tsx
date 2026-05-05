@@ -64,32 +64,60 @@ export default function DashboardLayout({
     }
   }, [status, session, router]);
 
-  // Sync user data
+  // Sync user data (with retry for intermittent Railway DB connection)
   useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const res = await fetch('/api/wallet');
-        const data = await res.json();
-        if (data.error) throw new Error(data.error);
+    if (status !== "authenticated") return;
 
-        const mockUser = {
-          id: '1',
-          name: session?.user?.name || 'Alex Developer',
-          email: session?.user?.email || 'alex@skillswap.local',
-          avatarUrl: session?.user?.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-          credits: data.credits,
-          trustScore: data.trustScore,
-          trustLevel: data.trustScore >= 90 ? 'Elite' : data.trustScore >= 75 ? 'Trusted' : data.trustScore >= 50 ? 'Verified' : 'Newbie',
-          completionRate: 92,
-        };
-        // @ts-ignore
-        setUser(mockUser);
-      } catch (error) {
-        console.error("Failed to sync user:", error);
+    let cancelled = false;
+
+    const fetchUser = async (retries = 3) => {
+      for (let attempt = 1; attempt <= retries; attempt++) {
+        if (cancelled) return;
+        try {
+          const res = await fetch('/api/wallet');
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+
+          const realUser = {
+            id: (session?.user as any)?.id || '1',
+            name: session?.user?.name || 'User',
+            email: session?.user?.email || '',
+            avatarUrl: session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name}`,
+            credits: data.credits ?? 0,
+            trustScore: data.trustScore ?? 50,
+            trustLevel: (data.trustScore ?? 50) >= 90 ? 'Elite' : (data.trustScore ?? 50) >= 75 ? 'Trusted' : (data.trustScore ?? 50) >= 50 ? 'Verified' : 'Newbie',
+            completionRate: 100,
+          };
+          // @ts-ignore
+          setUser(realUser);
+          return; // success — stop retrying
+        } catch (error) {
+          if (attempt < retries) {
+            console.warn(`User sync attempt ${attempt}/${retries} failed, retrying in 3s...`);
+            await new Promise(r => setTimeout(r, 3000));
+          } else {
+            console.warn("User sync failed after retries. Using session-only data.");
+            // Fallback: set user from session data only (no wallet/trust info)
+            // @ts-ignore
+            setUser({
+              id: (session?.user as any)?.id || '1',
+              name: session?.user?.name || 'User',
+              email: session?.user?.email || '',
+              avatarUrl: session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${session?.user?.name}`,
+              credits: 0,
+              trustScore: 50,
+              trustLevel: 'Newbie',
+              completionRate: 100,
+            });
+          }
+        }
       }
     };
+
     fetchUser();
-  }, [setUser, session]);
+
+    return () => { cancelled = true; };
+  }, [setUser, session, status]);
 
   return (
     <div className="flex h-screen w-full relative overflow-hidden bg-black">

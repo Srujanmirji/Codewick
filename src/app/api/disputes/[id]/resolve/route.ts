@@ -10,11 +10,11 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const disputeId = params.id;
+    const { id: disputeId } = await params;
 
     const dispute = await Dispute.findById(disputeId)
       .populate('filedBy', 'name trustScore')

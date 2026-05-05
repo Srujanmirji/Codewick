@@ -89,11 +89,6 @@ export default function SignupPage() {
             Join a trusted skill-sharing network. Connect with experts, learn new abilities, and share what you know.
           </p>
 
-          {/* Floating Glass Shape - Dark Theme */}
-          <div className="hidden lg:flex w-64 h-64 bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[40px] rotate-12 shadow-[0_8px_30px_rgb(0,0,0,0.5)] items-center justify-center -ml-10 mt-10 relative overflow-hidden group">
-             <div className="absolute inset-0 bg-gradient-to-tr from-blue-500/20 to-purple-500/20 opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-             <div className="absolute -inset-[100%] bg-gradient-to-r from-transparent via-white/10 to-transparent rotate-45 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out"></div>
-          </div>
         </motion.div>
 
         {/* RIGHT SIDE: Signup Card */}

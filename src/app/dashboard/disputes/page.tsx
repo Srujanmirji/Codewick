@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon, Loader2, Cpu, CheckCircle2 } from "lucide-react";
+import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon, Loader2, Cpu, CheckCircle2, Plus } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 import { toast } from "@/store/useToastStore";
@@ -24,30 +24,76 @@ const itemVariants = {
   }
 };
 
-const INITIAL_DISPUTES = [
-  { id: 1, title: "No-show for 'SEO Audit'", partner: "Sarah Jenkins", status: "In Review", date: "Today", severity: "Medium" },
-  { id: 2, title: "Poor connection quality", partner: "Michael Chen", status: "Resolved", date: "May 02", severity: "Low" },
-];
-
 export default function DisputesPage() {
   const [disputes, setDisputes] = useState<any[]>([]);
+  const [sessions, setSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
+  const [newDispute, setNewDispute] = useState({
+    sessionId: "",
+    reason: "Partner did not show up",
+    description: ""
+  });
+
   useEffect(() => {
     fetchDisputes();
+    fetchSessions();
   }, []);
 
   const fetchDisputes = async () => {
     try {
       const res = await fetch('/api/disputes');
       const data = await res.json();
-      setDisputes(data);
+      setDisputes(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error("Failed to load disputes");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSessions = async () => {
+    try {
+      const res = await fetch('/api/sessions');
+      const data = await res.json();
+      setSessions(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Failed to load sessions for dispute selection");
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newDispute.sessionId) {
+      toast.error("Please select a session to dispute");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/disputes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: newDispute.sessionId,
+          reason: newDispute.reason,
+          evidence: newDispute.description
+        })
+      });
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      toast.success("Dispute filed successfully!");
+      setIsModalOpen(false);
+      setNewDispute({ sessionId: "", reason: "Partner did not show up", description: "" });
+      fetchDisputes();
+    } catch (error: any) {
+      toast.error(error.message || "Failed to file dispute");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -96,7 +142,7 @@ export default function DisputesPage() {
       <motion.div variants={itemVariants} className="liquid-glass p-5 border-amber-400/20 bg-amber-400/5 flex items-center gap-4">
         <Info className="text-amber-400 flex-shrink-0" size={24} />
         <p className="text-sm text-amber-200/80">
-          Our team typically reviews disputes within 24-48 hours. Please ensure you have attached relevant proof or chat logs to your case.
+          Our AI Mediator analyzes session context and evidence to provide fair, neutral resolutions within seconds.
         </p>
       </motion.div>
 
@@ -204,13 +250,16 @@ export default function DisputesPage() {
             <div className="relative">
               <FileText className="absolute left-4 top-1/2 -translate-y-1/2 text-amber-400/60" size={18} />
               <select 
-                value={newDispute.session}
-                onChange={(e) => setNewDispute({ ...newDispute, session: e.target.value })}
+                value={newDispute.sessionId}
+                onChange={(e) => setNewDispute({ ...newDispute, sessionId: e.target.value })}
                 className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white appearance-none focus:outline-none focus:border-amber-400/50 transition-all cursor-pointer"
               >
-                <option value="UX Mentoring (Sarah)" className="bg-[#0f172a]">Recent Session: UX Mentoring (Sarah)</option>
-                <option value="Python Basics (Alex)" className="bg-[#0f172a]">May 04: Python Basics (Alex)</option>
-                <option value="Logo Review (John)" className="bg-[#0f172a]">May 01: Logo Review (John)</option>
+                <option value="" className="bg-[#0f172a]">Select a session...</option>
+                {sessions.map(s => (
+                  <option key={s._id} value={s._id} className="bg-[#0f172a]">
+                    {s.listingId?.skillOffered || 'Session'} with {s.providerId?.name || s.learnerId?.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -268,14 +317,5 @@ export default function DisputesPage() {
         </form>
       </Modal>
     </motion.div>
-  );
-}
-
-function Plus({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <line x1="12" y1="5" x2="12" y2="19"></line>
-      <line x1="5" y1="12" x2="19" y2="12"></line>
-    </svg>
   );
 }

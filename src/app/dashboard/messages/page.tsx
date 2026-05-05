@@ -2,33 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Search, Send, Plus, MoreVertical, Paperclip, Smile } from "lucide-react";
+import { MessageSquare, Search, Send, Plus, MoreVertical, Paperclip, Smile, ArrowRightLeft, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const CHATS = [
-  { id: 1, name: "Sarah Jenkins", lastMsg: "See you at the React session!", time: "2:45 PM", unread: 2, avatar: "https://i.pravatar.cc/150?u=sarah", online: true },
-  { id: 2, name: "Michael Chen", lastMsg: "The design looks much better now.", time: "11:30 AM", unread: 0, avatar: "https://i.pravatar.cc/150?u=michael", online: false },
-  { id: 3, name: "Emma Wilson", lastMsg: "Thanks for the help with Python!", time: "Yesterday", unread: 0, avatar: "https://i.pravatar.cc/150?u=emma", online: true },
-  { id: 4, name: "David Lee", lastMsg: "Can we reschedule to Tuesday?", time: "May 03", unread: 0, avatar: "https://i.pravatar.cc/150?u=david", online: false },
-];
-
-const INITIAL_CONVERSATIONS: Record<number, any[]> = {
-  1: [
-    { id: 1, sender: "Sarah Jenkins", text: "Hi! I was looking at your React Mentoring session. Are you available this Thursday?", time: "2:30 PM", isMe: false },
-    { id: 2, sender: "Me", text: "Yes, Thursday works perfectly for me. What topics would you like to cover?", time: "2:35 PM", isMe: true },
-    { id: 3, sender: "Sarah Jenkins", text: "I'd like to dive into Server Components and the new App Router patterns. See you at the React session!", time: "2:45 PM", isMe: false },
-  ],
-  2: [
-    { id: 1, sender: "Michael Chen", text: "Hey, did you see the new design system update?", time: "10:15 AM", isMe: false },
-    { id: 2, sender: "Me", text: "Checking it now! Looks very clean.", time: "10:20 AM", isMe: true },
-  ],
-  3: [
-    { id: 1, sender: "Emma Wilson", text: "The Python scripts are working perfectly! Thanks so much.", time: "Yesterday", isMe: false },
-  ],
-  4: [
-    { id: 1, sender: "David Lee", text: "Can we reschedule our session to Tuesday?", time: "May 03", isMe: false },
-  ]
-};
+import { useSession } from "next-auth/react";
+import { toast } from "@/store/useToastStore";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -48,13 +25,18 @@ const itemVariants = {
 };
 
 export default function MessagesPage() {
-  const [activeChatId, setActiveChatId] = useState(1);
-  const [conversations, setConversations] = useState(INITIAL_CONVERSATIONS);
+  const { data: session } = useSession();
+  const [conversations, setConversations] = useState<any[]>([]);
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
+  const [messages, setMessages] = useState<any[]>([]);
   const [messageInput, setMessageInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const activeChat = CHATS.find(c => c.id === activeChatId) || CHATS[0];
-  const activeMessages = conversations[activeChatId] || [];
+  const activeConversation = conversations.find(c => c.conversationId === activeConversationId);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -62,25 +44,181 @@ export default function MessagesPage() {
 
   useEffect(() => {
     scrollToBottom();
-  }, [activeMessages]);
+  }, [messages]);
 
-  const handleSendMessage = (e?: React.FormEvent) => {
-    e?.preventDefault();
-    if (!messageInput.trim()) return;
-
-    const newMessage = {
-      id: Date.now(),
-      sender: "Me",
-      text: messageInput,
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-      isMe: true
+  // Fetch conversations
+  useEffect(() => {
+    const fetchConversations = async () => {
+      try {
+        const res = await fetch('/api/messages');
+        const data = await res.json();
+        setConversations(Array.isArray(data) ? data : []);
+        // Auto-select first conversation
+        if (Array.isArray(data) && data.length > 0 && !activeConversationId) {
+          setActiveConversationId(data[0].conversationId);
+        }
+      } catch (error) {
+        console.error("Failed to load conversations");
+      } finally {
+        setLoading(false);
+      }
     };
+    fetchConversations();
+  }, []);
 
-    setConversations(prev => ({
-      ...prev,
-      [activeChatId]: [...(prev[activeChatId] || []), newMessage]
-    }));
-    setMessageInput("");
+  // Fetch messages when active conversation changes
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const fetchMessages = async () => {
+      setLoadingMessages(true);
+      try {
+        const res = await fetch(`/api/messages/${activeConversationId}`);
+        const data = await res.json();
+        setMessages(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to load messages");
+      } finally {
+        setLoadingMessages(false);
+      }
+    };
+    fetchMessages();
+  }, [activeConversationId]);
+
+  // Poll for new messages every 5 seconds
+  useEffect(() => {
+    if (!activeConversationId) return;
+
+    const interval = setInterval(async () => {
+      try {
+        const res = await fetch(`/api/messages/${activeConversationId}`);
+        const data = await res.json();
+        if (Array.isArray(data)) setMessages(data);
+      } catch { /* silent */ }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [activeConversationId]);
+
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    if (!messageInput.trim() || !activeConversation || sending) return;
+
+    setSending(true);
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: activeConversation.partner._id,
+          text: messageInput,
+          type: 'text'
+        })
+      });
+
+      if (!res.ok) throw new Error("Failed to send");
+
+      const newMsg = await res.json();
+      setMessages(prev => [...prev, newMsg]);
+      setMessageInput("");
+
+      // Update last message in conversations list
+      setConversations(prev => prev.map(c =>
+        c.conversationId === activeConversationId
+          ? { ...c, lastMessage: messageInput, lastMessageTime: new Date().toISOString() }
+          : c
+      ));
+    } catch (error) {
+      toast.error("Failed to send message");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleAcceptRequest = async (msg: any) => {
+    if (!msg.metadata?.skillRequestId) return;
+    
+    try {
+      const res = await fetch(`/api/marketplace/requests/${msg.metadata.skillRequestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'accepted' })
+      });
+      
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      toast.success("Swap request accepted! Session scheduled.");
+
+      // Send a system message
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: activeConversation.partner._id,
+          text: `✅ Swap request accepted! A session for ${msg.metadata.skillOffered} ↔ ${msg.metadata.skillWanted} has been scheduled.`,
+          type: 'system'
+        })
+      });
+
+      // Refresh messages
+      const msgRes = await fetch(`/api/messages/${activeConversationId}`);
+      const msgData = await msgRes.json();
+      if (Array.isArray(msgData)) setMessages(msgData);
+
+    } catch (error: any) {
+      toast.error(error.message || "Failed to accept request");
+    }
+  };
+
+  const handleRejectRequest = async (msg: any) => {
+    if (!msg.metadata?.skillRequestId) return;
+
+    try {
+      const res = await fetch(`/api/marketplace/requests/${msg.metadata.skillRequestId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: 'rejected' })
+      });
+
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+
+      toast.info("Swap request declined.");
+
+      await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          receiverId: activeConversation.partner._id,
+          text: `❌ Swap request for ${msg.metadata.skillOffered} ↔ ${msg.metadata.skillWanted} was declined.`,
+          type: 'system'
+        })
+      });
+
+      const msgRes = await fetch(`/api/messages/${activeConversationId}`);
+      const msgData = await msgRes.json();
+      if (Array.isArray(msgData)) setMessages(msgData);
+
+    } catch (error: any) {
+      toast.error(error.message || "Failed to reject request");
+    }
+  };
+
+  const currentUserId = (session?.user as any)?.id;
+  const filteredConversations = conversations.filter(c =>
+    c.partner?.name?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const formatTime = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = diff / (1000 * 60 * 60);
+
+    if (hours < 24) return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (hours < 48) return 'Yesterday';
+    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
   };
 
   return (
@@ -95,14 +233,13 @@ export default function MessagesPage() {
         <div className="p-5 border-b border-white/10">
           <div className="flex justify-between items-center mb-5">
             <h1 className="text-xl font-fustat font-black text-white/95 tracking-tight">Messages</h1>
-            <button className="p-2 rounded-xl glass-button text-cyan-400 hover:scale-110 active:scale-95 transition-all">
-              <Plus size={20} />
-            </button>
           </div>
           <div className="relative group">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 group-focus-within:text-cyan-400 transition-colors" />
             <input
               type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search chats..."
               className="w-full bg-white/5 border border-white/10 rounded-full py-2.5 pl-10 pr-4 text-sm text-white/95 placeholder:text-white/40 focus:outline-none focus:border-cyan-400/50 transition-all shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)]"
             />
@@ -110,120 +247,231 @@ export default function MessagesPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto custom-scrollbar">
-          {CHATS.map((chat) => {
-            const isActive = chat.id === activeChatId;
-            return (
-              <div 
-                key={chat.id} 
-                onClick={() => setActiveChatId(chat.id)}
-                className={cn(
-                  "p-4 flex items-center gap-4 cursor-pointer transition-all relative group",
-                  isActive ? "bg-white/10" : "hover:bg-white/5"
-                )}
-              >
-                {isActive && (
-                  <motion.div layoutId="active-chat-indicator" className="absolute left-0 w-1 h-10 bg-cyan-400 rounded-r-full shadow-[0_0_15px_rgba(34,213,238,0.6)]" />
-                )}
-                <div className="relative">
-                  <img src={chat.avatar} alt={chat.name} className="w-12 h-12 rounded-full border border-white/10 shadow-lg" />
-                  {chat.online && (
-                    <div className="absolute bottom-0.5 right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-[#1a1c2e]"></div>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="w-6 h-6 text-cyan-400 animate-spin" />
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <MessageSquare className="w-10 h-10 text-white/15 mb-3" />
+              <p className="text-sm text-white/40">No conversations yet</p>
+              <p className="text-xs text-white/25 mt-1">Send a swap request in the Marketplace to start chatting!</p>
+            </div>
+          ) : (
+            filteredConversations.map((chat) => {
+              const isActive = chat.conversationId === activeConversationId;
+              return (
+                <div 
+                  key={chat.conversationId} 
+                  onClick={() => setActiveConversationId(chat.conversationId)}
+                  className={cn(
+                    "p-4 flex items-center gap-4 cursor-pointer transition-all relative group",
+                    isActive ? "bg-white/10" : "hover:bg-white/5"
+                  )}
+                >
+                  {isActive && (
+                    <motion.div layoutId="active-chat-indicator" className="absolute left-0 w-1 h-10 bg-cyan-400 rounded-r-full shadow-[0_0_15px_rgba(34,213,238,0.6)]" />
+                  )}
+                  <div className="relative">
+                    <img src={chat.partner.avatar} alt={chat.partner.name} className="w-12 h-12 rounded-full border border-white/10 shadow-lg object-cover bg-black/20" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <h3 className={cn("text-sm font-bold truncate transition-colors", isActive ? "text-cyan-400" : "text-white/90")}>{chat.partner.name}</h3>
+                      <span className="text-[10px] text-white/40 flex-shrink-0 ml-2">{formatTime(chat.lastMessageTime)}</span>
+                    </div>
+                    <p className="text-xs text-white/40 truncate group-hover:text-white/60 transition-colors flex items-center gap-1">
+                      {chat.lastMessageType === 'swap-request' && <ArrowRightLeft size={10} className="text-cyan-400 flex-shrink-0" />}
+                      {chat.lastMessage}
+                    </p>
+                  </div>
+                  {chat.unread > 0 && !isActive && (
+                    <div className="w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center text-[10px] font-bold text-black shadow-[0_0_10px_rgba(34,213,238,0.5)]">
+                      {chat.unread}
+                    </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex justify-between items-baseline mb-0.5">
-                    <h3 className={cn("text-sm font-bold truncate transition-colors", isActive ? "text-cyan-400" : "text-white/90")}>{chat.name}</h3>
-                    <span className="text-[10px] text-white/40">{chat.time}</span>
-                  </div>
-                  <p className="text-xs text-white/40 truncate group-hover:text-white/60 transition-colors">
-                    {conversations[chat.id]?.[conversations[chat.id].length - 1]?.text || chat.lastMsg}
-                  </p>
-                </div>
-                {chat.unread > 0 && !isActive && (
-                  <div className="w-5 h-5 bg-cyan-400 rounded-full flex items-center justify-center text-[10px] font-bold text-black shadow-[0_0_10px_rgba(34,213,238,0.5)]">
-                    {chat.unread}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
       </motion.div>
 
       {/* Main Chat Area */}
       <motion.div variants={itemVariants} className="flex-1 liquid-glass flex flex-col overflow-hidden relative">
-        <AnimatePresence mode="wait">
-          <motion.div 
-            key={activeChatId}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.2 }}
-            className="flex flex-col h-full"
-          >
-            {/* Chat Header */}
-            <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/2 backdrop-blur-md relative z-10">
-              <div className="flex items-center gap-4">
-                <div className="relative">
-                  <img src={activeChat.avatar} alt={activeChat.name} className="w-10 h-10 rounded-full border border-white/10" />
-                  {activeChat.online && (
-                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-[#1a1c2e]"></div>
-                  )}
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white/95">{activeChat.name}</h3>
-                  <p className={cn("text-[10px] font-medium", activeChat.online ? "text-emerald-400" : "text-white/30")}>
-                    {activeChat.online ? "Online" : "Offline"}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button className="p-2 rounded-xl glass-button text-white/40 hover:text-white/95 transition-all">
-                  <MoreVertical size={18} />
-                </button>
-              </div>
+        {!activeConversationId ? (
+          <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
+            <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
+              <MessageSquare className="w-10 h-10 text-white/15" />
             </div>
-
-            {/* Messages Area */}
-            <div className="flex-1 p-6 overflow-y-auto custom-scrollbar flex flex-col gap-6 bg-gradient-to-b from-transparent to-white/1">
-              <div className="flex justify-center mb-2">
-                <span className="bg-white/5 border border-white/10 px-4 py-1 rounded-full text-[10px] text-white/40 uppercase tracking-widest font-black">Today</span>
+            <h2 className="text-xl font-bold text-white/90 mb-2">Welcome to Messages</h2>
+            <p className="text-sm text-white/40 max-w-sm">
+              Send a swap request from the Marketplace to start a conversation with a mentor.
+            </p>
+          </div>
+        ) : (
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={activeConversationId}
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.2 }}
+              className="flex flex-col h-full"
+            >
+              {/* Chat Header */}
+              <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/2 backdrop-blur-md relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img src={activeConversation?.partner?.avatar} alt={activeConversation?.partner?.name} className="w-10 h-10 rounded-full border border-white/10 object-cover bg-black/20" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white/95">{activeConversation?.partner?.name}</h3>
+                    <p className="text-[10px] font-medium text-white/30">SkillSwap Partner</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button className="p-2 rounded-xl glass-button text-white/40 hover:text-white/95 transition-all">
+                    <MoreVertical size={18} />
+                  </button>
+                </div>
               </div>
-              
-              <AnimatePresence initial={false}>
-                {activeMessages.map((msg) => (
-                  <motion.div 
-                    key={msg.id}
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className={cn(
-                      "flex flex-col gap-1.5 max-w-[75%]",
-                      msg.isMe ? "self-end items-end" : "items-start"
-                    )}
-                  >
-                    <div className={cn(
-                      "p-4 rounded-2xl text-sm shadow-lg border",
-                      msg.isMe 
-                        ? "bg-cyan-500/10 border-cyan-400/30 text-white/95 rounded-tr-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" 
-                        : "bg-white/5 border-white/10 text-white/90 rounded-tl-none"
-                    )}>
-                      {msg.text}
+
+              {/* Messages Area */}
+              <div className="flex-1 p-6 overflow-y-auto custom-scrollbar flex flex-col gap-4 bg-gradient-to-b from-transparent to-white/1">
+                {loadingMessages ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <Loader2 className="w-8 h-8 text-cyan-400 animate-spin" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center">
+                    <p className="text-sm text-white/30">No messages yet. Start the conversation!</p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex justify-center mb-2">
+                      <span className="bg-white/5 border border-white/10 px-4 py-1 rounded-full text-[10px] text-white/40 uppercase tracking-widest font-black">Conversation</span>
                     </div>
-                    <span className="text-[10px] text-white/30 px-1">{msg.time}</span>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-              <div ref={messagesEndRef} />
-            </div>
 
-            {/* Message Input */}
-            <div className="p-5 border-t border-white/10 relative z-10 bg-white/2">
-              <form onSubmit={handleSendMessage} className="relative group flex items-center gap-3">
-                <div className="flex items-center gap-1">
-                    <button type="button" className="p-2 text-white/30 hover:text-cyan-400 transition-all hover:scale-110 active:scale-95"><Paperclip size={20} /></button>
-                    <button type="button" className="p-2 text-white/30 hover:text-cyan-400 transition-all hover:scale-110 active:scale-95"><Smile size={20} /></button>
-                </div>
-                <div className="relative flex-1">
+                    <AnimatePresence initial={false}>
+                      {messages.map((msg) => {
+                        const isMe = msg.senderId?._id === currentUserId || msg.senderId === currentUserId;
+
+                        // System messages
+                        if (msg.type === 'system') {
+                          return (
+                            <motion.div
+                              key={msg._id}
+                              initial={{ opacity: 0, y: 10 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              className="flex justify-center my-2"
+                            >
+                              <div className="bg-white/5 border border-white/10 rounded-full px-4 py-2 text-xs text-white/50 max-w-md text-center">
+                                {msg.text}
+                              </div>
+                            </motion.div>
+                          );
+                        }
+
+                        // Swap request messages
+                        if (msg.type === 'swap-request') {
+                          return (
+                            <motion.div
+                              key={msg._id}
+                              initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                              animate={{ opacity: 1, y: 0, scale: 1 }}
+                              className={cn(
+                                "flex flex-col gap-1.5 max-w-[80%]",
+                                isMe ? "self-end items-end" : "items-start"
+                              )}
+                            >
+                              <div className="p-4 rounded-2xl border bg-gradient-to-br from-cyan-500/10 to-indigo-500/10 border-cyan-400/25 shadow-lg w-full max-w-sm">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <ArrowRightLeft size={16} className="text-cyan-400" />
+                                  <span className="text-xs font-black text-cyan-400 uppercase tracking-wide">Swap Request</span>
+                                </div>
+                                <div className="space-y-2 mb-3">
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-white/50">Offering:</span>
+                                    <span className="font-bold text-white/90">{msg.metadata?.skillOffered}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-white/50">Wanting:</span>
+                                    <span className="font-bold text-cyan-400">{msg.metadata?.skillWanted}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between text-sm">
+                                    <span className="text-white/50">Cost:</span>
+                                    <span className="font-bold text-white/90 flex items-center gap-1"><Clock size={12} /> {msg.metadata?.creditCost} Credits</span>
+                                  </div>
+                                </div>
+                                <div className="pt-3 border-t border-white/10">
+                                  <p className="text-xs text-white/60 italic mb-3">"{msg.text}"</p>
+                                  {!isMe && msg.metadata?.status === 'pending' && (
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => handleAcceptRequest(msg)}
+                                        className="flex-1 py-2 rounded-lg bg-emerald-500/20 border border-emerald-400/30 text-emerald-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-500/30 transition-all active:scale-95"
+                                      >
+                                        <CheckCircle2 size={14} /> Accept
+                                      </button>
+                                      <button
+                                        onClick={() => handleRejectRequest(msg)}
+                                        className="flex-1 py-2 rounded-lg bg-red-500/20 border border-red-400/30 text-red-400 text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-red-500/30 transition-all active:scale-95"
+                                      >
+                                        <XCircle size={14} /> Decline
+                                      </button>
+                                    </div>
+                                  )}
+                                  {msg.metadata?.status === 'accepted' && (
+                                    <div className="flex items-center gap-2 text-emerald-400 text-xs font-bold">
+                                      <CheckCircle2 size={14} /> Accepted
+                                    </div>
+                                  )}
+                                  {msg.metadata?.status === 'rejected' && (
+                                    <div className="flex items-center gap-2 text-red-400 text-xs font-bold">
+                                      <XCircle size={14} /> Declined
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              <span className="text-[10px] text-white/30 px-1">{formatTime(msg.createdAt)}</span>
+                            </motion.div>
+                          );
+                        }
+
+                        // Regular text messages
+                        return (
+                          <motion.div 
+                            key={msg._id}
+                            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            className={cn(
+                              "flex flex-col gap-1.5 max-w-[75%]",
+                              isMe ? "self-end items-end" : "items-start"
+                            )}
+                          >
+                            <div className={cn(
+                              "p-4 rounded-2xl text-sm shadow-lg border",
+                              isMe 
+                                ? "bg-cyan-500/10 border-cyan-400/30 text-white/95 rounded-tr-none shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]" 
+                                : "bg-white/5 border-white/10 text-white/90 rounded-tl-none"
+                            )}>
+                              {msg.text}
+                            </div>
+                            <span className="text-[10px] text-white/30 px-1">{formatTime(msg.createdAt)}</span>
+                          </motion.div>
+                        );
+                      })}
+                    </AnimatePresence>
+                  </>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Message Input */}
+              <div className="p-5 border-t border-white/10 relative z-10 bg-white/2">
+                <form onSubmit={handleSendMessage} className="relative group flex items-center gap-3">
+                  <div className="relative flex-1">
                     <input
                       type="text"
                       value={messageInput}
@@ -233,16 +481,17 @@ export default function MessagesPage() {
                     />
                     <button 
                       type="submit"
-                      disabled={!messageInput.trim()}
+                      disabled={!messageInput.trim() || sending}
                       className="absolute right-2 top-1/2 -translate-y-1/2 bg-cyan-400 hover:bg-cyan-300 disabled:opacity-50 disabled:cursor-not-allowed text-black p-2.5 rounded-xl transition-all shadow-[0_0_20px_rgba(34,213,238,0.3)] active:scale-90"
                     >
-                      <Send size={18} />
+                      {sending ? <Loader2 size={18} className="animate-spin" /> : <Send size={18} />}
                     </button>
-                </div>
-              </form>
-            </div>
-          </motion.div>
-        </AnimatePresence>
+                  </div>
+                </form>
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        )}
       </motion.div>
     </motion.div>
   );

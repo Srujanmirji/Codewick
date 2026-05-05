@@ -40,7 +40,7 @@ export default function Home() {
               </div>
             </div>
 
-            <Link href="/login" className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-black/5 px-6 py-2.5 rounded-full text-sm font-bold text-[#111827] shadow-sm transition-all duration-300 active:scale-95 group">
+            <Link href="/signup" className="flex items-center gap-2 bg-white hover:bg-gray-50 border border-black/5 px-6 py-2.5 rounded-full text-sm font-bold text-[#111827] shadow-sm transition-all duration-300 active:scale-95 group">
               SignUp
               <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </Link>
@@ -64,7 +64,7 @@ export default function Home() {
             </p>
 
             {/* CTA */}
-            <Link href="/dashboard/marketplace" className="group flex items-center gap-4 bg-[#3B82F6] hover:bg-[#2563EB] px-10 py-5 rounded-2xl text-white font-bold text-lg shadow-[0_20px_40px_-10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95">
+            <Link href="/signup" className="group flex items-center gap-4 bg-[#3B82F6] hover:bg-[#2563EB] px-10 py-5 rounded-2xl text-white font-bold text-lg shadow-[0_20px_40px_-10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95">
               Get Started Now
               <div className="bg-white rounded-full p-1.5 shadow-sm group-hover:translate-x-1 transition-transform duration-300">
                 <ArrowRight className="w-4 h-4 text-[#3B82F6]" />

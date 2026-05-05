@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import Session from '@/models/Session';
 import User from '@/models/User';
@@ -6,35 +8,46 @@ import { checkFraud } from '@/lib/fraudDetection';
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const { rating, review } = await request.json();
-    const sessionId = params.id;
+    const sessionAuth = await getServerSession(authOptions);
 
-    const mockUser = await User.findOne({ email: 'alex@skillswap.local' });
-    if (!mockUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!sessionAuth?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { rating, review } = await request.json();
+    const { id: sessionId } = await params;
+
+    const user = await User.findOne({ email: sessionAuth.user.email });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const session = await Session.findById(sessionId);
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
-    const partnerId = session.providerId.toString() === mockUser._id.toString() 
-      ? session.learnerId.toString() 
-      : session.providerId.toString();
+    const isProvider = session.providerId.toString() === user._id.toString();
+    const isLearner = session.learnerId.toString() === user._id.toString();
+
+    if (!isProvider && !isLearner) {
+      return NextResponse.json({ error: 'Not a participant of this session' }, { status: 403 });
+    }
+
+    const partnerId = isProvider ? session.learnerId.toString() : session.providerId.toString();
 
     // Fraud Check
-    const fraud = await checkFraud(mockUser._id.toString(), partnerId, 'rate');
+    const fraud = await checkFraud(user._id.toString(), partnerId, 'rate');
     if (fraud.isFraud) {
       return NextResponse.json({ error: fraud.message }, { status: 400 });
     }
 
     // Handle rating submission
-    if (session.providerId.toString() === mockUser._id.toString()) {
+    if (isProvider) {
       // Provider rating the learner
       session.learnerRating = rating;
       session.learnerReview = review;
-    } else if (session.learnerId.toString() === mockUser._id.toString()) {
+    } else {
       // Learner rating the provider
       session.providerRating = rating;
       session.providerReview = review;
@@ -53,12 +66,10 @@ export async function POST(
 
         await provider.save();
       }
-    } else {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
     }
     
-    mockUser.lastActiveAt = new Date();
-    await mockUser.save();
+    user.lastActiveAt = new Date();
+    await user.save();
 
     await session.save();
 

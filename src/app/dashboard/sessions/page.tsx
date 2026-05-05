@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, User, CheckCircle2, ChevronRight, XCircle, Star, Loader2, MessageSquare, ShieldCheck } from "lucide-react";
+import { Calendar, Clock, User, CheckCircle2, ChevronRight, XCircle, Star, Loader2, MessageSquare, ShieldCheck, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 import { toast } from "@/store/useToastStore";
@@ -118,11 +118,11 @@ export default function SessionsPage() {
     }
   };
 
-  const filteredSessions = sessions.filter(s => {
+  const filteredSessions = Array.isArray(sessions) ? sessions.filter(s => {
     if (activeTab === "Upcoming") return s.status === 'scheduled' || s.status === 'in-progress';
     if (activeTab === "Completed") return s.status === 'completed';
     return s.status === 'disputed';
-  });
+  }) : [];
 
   return (
     <motion.div

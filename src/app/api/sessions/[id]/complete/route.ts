@@ -1,29 +1,39 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import Session from '@/models/Session';
 import User from '@/models/User';
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await connectDB();
-    const sessionId = params.id;
+    const sessionAuth = await getServerSession(authOptions);
 
-    const mockUser = await User.findOne({ email: 'alex@skillswap.local' });
-    if (!mockUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    if (!sessionAuth?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { id: sessionId } = await params;
+    const user = await User.findOne({ email: sessionAuth.user.email });
+    
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
 
     const session = await Session.findById(sessionId);
     if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
 
     // Identify if user is provider or learner and set confirmation
-    if (session.providerId.toString() === mockUser._id.toString()) {
+    if (session.providerId.toString() === user._id.toString()) {
       session.providerConfirmed = true;
-    } else if (session.learnerId.toString() === mockUser._id.toString()) {
+    } else if (session.learnerId.toString() === user._id.toString()) {
       session.learnerConfirmed = true;
     } else {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
+      return NextResponse.json({ error: 'Not a participant of this session' }, { status: 403 });
     }
 
     // If both confirmed, mark as completed

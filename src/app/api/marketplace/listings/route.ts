@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import SkillListing from '@/models/SkillListing';
 import User from '@/models/User';
@@ -6,17 +8,20 @@ import User from '@/models/User';
 export async function GET(request: Request) {
   try {
     await connectDB();
+    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
 
-    // In real app, get from session
-    const mockUser = await User.findOne({ email: 'alex@skillswap.local' });
-    const mockUserId = mockUser?._id;
-
     let filter: any = { status: 'open' };
-    if (mockUserId) {
-      filter.userId = { $ne: mockUserId };
+    
+    // Filter out the current user's own listings
+    if (session?.user) {
+      const user = await User.findOne({ email: session.user.email });
+      if (user) {
+        filter.userId = { $ne: user._id };
+      }
     }
+
     if (query) {
       filter.$or = [
         { skillOffered: { $regex: query, $options: 'i' } },
@@ -37,26 +42,22 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     await connectDB();
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
+    const user = await User.findOne({ email: session.user.email });
     
-    // In real app, get from session
-    let mockUser = await User.findOne({ email: 'alex@skillswap.local' });
-    
-    // Auto-create mock user if missing in the new database
-    if (!mockUser) {
-      mockUser = await User.create({
-        name: 'Alex Developer',
-        email: 'alex@skillswap.local',
-        avatarUrl: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
-        timeCredits: 10,
-        trustScore: 85,
-        trustLevel: 'Trusted'
-      });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
 
     const listing = await SkillListing.create({
       ...body,
-      userId: mockUser._id,
+      userId: user._id,
       status: 'open'
     });
 

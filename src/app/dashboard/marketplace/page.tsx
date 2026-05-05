@@ -7,6 +7,7 @@ import { toast } from "@/store/useToastStore";
 import { cn } from "@/lib/utils";
 import { Modal } from "@/components/ui/Modal";
 import { useUserStore } from "@/store/useUserStore";
+import { useRouter } from "next/navigation";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -37,6 +38,7 @@ const itemVariants = {
 const CATEGORIES = ['All Skills', 'Design', 'Development', 'Marketing', 'Languages', 'Business', 'Photography'];
 
 export default function MarketplacePage() {
+  const router = useRouter();
   const { user } = useUserStore();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Skills");
@@ -105,13 +107,19 @@ export default function MarketplacePage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: requestMessage }),
       });
-      if (!res.ok) throw new Error("Failed to send request");
+      if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.error || "Failed to send request");
+      }
       
-      toast.success("Swap request sent!");
+      toast.success("Swap request sent! Check your Messages.");
       setIsRequestModalOpen(false);
       setRequestMessage("");
-    } catch (error) {
-      toast.error("Error sending request");
+      
+      // Redirect to messages so the user can see the request
+      setTimeout(() => router.push('/dashboard/messages'), 1000);
+    } catch (error: any) {
+      toast.error(error.message || "Error sending request");
     } finally {
       setIsSubmitting(false);
     }
@@ -352,6 +360,11 @@ export default function MarketplacePage() {
               {" "}in exchange for teaching them <span className="font-bold text-white/90">{selectedListing?.skillWanted}</span>.
             </p>
             <p className="text-xs text-white/40 mt-2">Cost: {selectedListing?.creditCost} Time Credits</p>
+          </div>
+
+          <div className="flex items-center gap-2 px-1">
+            <MessageSquare size={14} className="text-white/30" />
+            <p className="text-xs text-white/40">This request will be sent via <span className="text-cyan-400 font-bold">Messages</span></p>
           </div>
           
           <div className="space-y-2">

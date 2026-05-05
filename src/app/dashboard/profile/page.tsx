@@ -143,8 +143,8 @@ export default function ProfilePage() {
     );
   }
 
-  const displayName = profile?.name || localUser?.name || session?.user?.name || "Alex Developer";
-  const displayEmail = profile?.email || localUser?.email || session?.user?.email || "alex@skillswap.local";
+  const displayName = profile?.name || localUser?.name || session?.user?.name || "User";
+  const displayEmail = profile?.email || localUser?.email || session?.user?.email || "";
   const displayAvatar = profile?.image || localUser?.avatarUrl || session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`;
   const bannerUrl = profile?.banner || localUser?.bannerUrl; 
   
