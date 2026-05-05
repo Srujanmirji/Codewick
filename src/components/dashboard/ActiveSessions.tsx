@@ -20,7 +20,7 @@ export function ActiveSessions({ sessions }: { sessions: Session[] }) {
       {/* Subtle background glow */}
       <div className="absolute top-0 right-1/4 w-32 h-32 bg-cyan-400/5 rounded-full blur-[40px] pointer-events-none"></div>
 
-      <h3 className="text-lg font-semibold text-white/95 mb-4 relative z-10">Upcoming Sessions</h3>
+      <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-white/90 to-cyan-100 bg-clip-text text-transparent drop-shadow-sm mb-4 relative z-10">Upcoming Sessions</h3>
       <div className="flex-1 space-y-3 overflow-y-auto custom-scrollbar pr-2 relative z-10">
         {sessions.map((session) => {
           const sessionDate = new Date(session.date);

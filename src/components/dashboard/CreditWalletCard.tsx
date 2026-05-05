@@ -18,12 +18,12 @@ export function CreditWalletCard({ data }: Props) {
 
       <div className="relative z-10">
         <div className="flex items-center gap-2 text-white/65 text-sm font-medium mb-2 uppercase tracking-widest drop-shadow-sm">
-          <Clock className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_3px_rgba(34,213,238,0.3)]" />
+          <Clock className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_8px_rgba(34,213,238,0.6)]" />
           Time Credits
         </div>
         <div className="flex items-end gap-3">
-          <h2 className="text-4xl font-fustat font-bold text-white/95">{user?.credits}</h2>
-          <span className="text-sm text-white/40 mb-1 font-medium">hrs available</span>
+          <h2 className="text-4xl font-fustat font-bold bg-gradient-to-r from-cyan-200 to-indigo-300 bg-clip-text text-transparent drop-shadow-md">{user?.credits}</h2>
+          <span className="text-sm text-cyan-400/60 mb-1 font-medium">hrs available</span>
         </div>
         
         <div className="flex gap-4 mt-4 text-sm font-medium">

@@ -40,7 +40,7 @@ export function RecentActivity({ activities, disputes }: Props) {
         </div>
       )}
 
-      <h3 className="text-lg font-semibold text-white/95 mb-5 drop-shadow-sm">Recent Activity</h3>
+      <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-white/90 to-cyan-100 bg-clip-text text-transparent mb-5 drop-shadow-sm">Recent Activity</h3>
       <div className="flex-1 relative">
         {/* Glowing Timeline Line */}
         <div className="absolute left-[15px] top-2 bottom-2 w-0.5 bg-gradient-to-b from-cyan-400/20 via-indigo-500/10 to-transparent rounded-full"></div>

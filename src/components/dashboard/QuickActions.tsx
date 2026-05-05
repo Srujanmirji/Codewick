@@ -13,7 +13,7 @@ const actions = [
 export function QuickActions() {
   return (
     <div className="liquid-glass-static p-6 h-full flex flex-col justify-center">
-      <h3 className="text-sm font-semibold text-white/65 mb-4 uppercase tracking-widest drop-shadow-sm">Quick Actions</h3>
+      <h3 className="text-sm font-semibold bg-gradient-to-r from-cyan-100 to-white/40 bg-clip-text text-transparent mb-4 uppercase tracking-widest drop-shadow-sm">Quick Actions</h3>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {actions.map((action, idx) => (
           <motion.button

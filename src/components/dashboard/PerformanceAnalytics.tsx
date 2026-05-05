@@ -10,7 +10,7 @@ export function PerformanceAnalytics({ data }: Props) {
   return (
     <div className="liquid-glass p-6 h-full min-h-[400px] flex flex-col group">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="text-lg font-semibold text-white drop-shadow-sm">Performance Analytics</h3>
+        <h3 className="text-lg font-semibold bg-gradient-to-r from-white via-white/90 to-cyan-100 bg-clip-text text-transparent drop-shadow-sm">Performance Analytics</h3>
         <select className="bg-white/5 border border-white/10 text-gray-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400/50 shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] transition-colors">
           <option className="bg-[#020617] text-gray-200">This Week</option>
           <option className="bg-[#020617] text-gray-200">Last Week</option>

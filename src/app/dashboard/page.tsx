@@ -50,7 +50,13 @@ export default function DashboardPage() {
   }, []);
 
   return (
-    <AnimatePresence mode="wait">
+    <div className="relative w-full h-full">
+      {/* Background Orbs (Lava Lamp Effect) */}
+      <div className="absolute top-[10%] left-[20%] w-[40vw] h-[40vw] max-w-[400px] max-h-[400px] rounded-full bg-cyan-500/20 blur-[120px] animate-float-slow pointer-events-none -z-10" />
+      <div className="absolute bottom-[20%] right-[10%] w-[35vw] h-[35vw] max-w-[350px] max-h-[350px] rounded-full bg-indigo-500/20 blur-[120px] animate-float-slow-reverse pointer-events-none -z-10" />
+      <div className="absolute top-[40%] left-[60%] w-[30vw] h-[30vw] max-w-[300px] max-h-[300px] rounded-full bg-fuchsia-500/10 blur-[100px] animate-float-slow pointer-events-none -z-10" style={{ animationDelay: '5s' }} />
+
+      <AnimatePresence mode="wait">
       {loading || !data ? (
         <motion.div 
           key="skeleton"
@@ -90,7 +96,7 @@ export default function DashboardPage() {
           {/* Header */}
           <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center liquid-glass-static p-6 rounded-[24px] gap-4">
             <div>
-              <h1 className="text-3xl font-fustat font-bold text-white/95 mb-1 drop-shadow-sm">Dashboard</h1>
+              <h1 className="text-3xl font-fustat font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent mb-1 drop-shadow-sm">Dashboard</h1>
               <p className="text-white/65">Welcome back! Here's what's happening with your account.</p>
             </div>
             <div className="text-sm text-white/65 flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] backdrop-blur-md">
@@ -131,5 +137,6 @@ export default function DashboardPage() {
         </motion.div>
       )}
     </AnimatePresence>
+    </div>
   );
 }
