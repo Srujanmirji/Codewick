@@ -92,7 +92,7 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Features Section */}
+        {/* 1. Feature Section (Grid) */}
         <div className="w-full mt-32 z-20">
           <div className="text-center mb-16">
             <h2 className="font-bold text-4xl text-[#111827] mb-4">Why Choose SkillSwap</h2>
@@ -167,6 +167,7 @@ export default function Home() {
             </div>
           </div>
         </div>
+
 
         {/* Final CTA */}
         <div className="w-full mt-32 mb-20 z-20">
