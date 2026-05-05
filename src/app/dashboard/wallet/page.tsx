@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { Wallet, ArrowUpRight, ArrowDownLeft, History, CreditCard, Plus, Check, ShieldCheck, Zap } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useSpring, useTransform, animate } from "framer-motion";
+import { Wallet, ArrowUpRight, ArrowDownLeft, History, CreditCard, Plus, Check, ShieldCheck, Zap, Loader2 } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Modal } from "@/components/ui/Modal";
 import { useUserStore } from "@/store/useUserStore";
@@ -39,18 +39,56 @@ const itemVariants = {
   }
 };
 
-const TRANSACTIONS = [
-  { id: 1, title: "English Mentoring", amount: "+2.0", date: "Today, 2:45 PM", status: "Earned" },
-  { id: 2, title: "Figma Workshop", amount: "-3.5", date: "Yesterday, 10:15 AM", status: "Spent" },
-  { id: 3, title: "React Debugging", amount: "+4.0", date: "May 03, 11:30 AM", status: "Earned" },
-  { id: 4, title: "Logo Design", amount: "-2.0", date: "May 01, 4:00 PM", status: "Spent" },
-];
+function AnimatedNumber({ value }: { value: number }) {
+  const [displayValue, setDisplayValue] = useState(0);
+
+  useEffect(() => {
+    const controls = animate(displayValue, value, {
+      duration: 1.5,
+      ease: "easeOut",
+      onUpdate: (latest) => setDisplayValue(latest),
+    });
+    return () => controls.stop();
+  }, [value]);
+
+  return <span>{displayValue.toFixed(1)}</span>;
+}
 
 export default function WalletPage() {
   const { user, updateUser } = useUserStore();
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [selectedPack, setSelectedPack] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  const [loading, setLoading] = useState(true);
+  const [walletData, setWalletData] = useState<{
+    credits: number;
+    transactions: any[];
+  }>({ credits: 0, transactions: [] });
+
+  useEffect(() => {
+    fetchWalletData();
+  }, []);
+
+  const fetchWalletData = async () => {
+    try {
+      const res = await fetch('/api/wallet');
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      setWalletData({
+        credits: data.credits,
+        transactions: data.transactions
+      });
+      // Update local store to match
+      updateUser({ credits: data.credits });
+    } catch (error) {
+      console.error("Failed to fetch wallet:", error);
+      toast.error("Could not sync wallet data");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handlePurchase = () => {
     if (!selectedPack) return;
@@ -61,7 +99,9 @@ export default function WalletPage() {
     // Simulate API call
     setTimeout(() => {
       if (pack && user) {
-        updateUser({ credits: user.credits + pack.credits });
+        const newTotal = walletData.credits + pack.credits;
+        setWalletData(prev => ({ ...prev, credits: newTotal }));
+        updateUser({ credits: newTotal });
         toast.success(`Successfully purchased ${pack.credits} credits!`);
         setIsBuyModalOpen(false);
         setIsProcessing(false);
@@ -87,8 +127,11 @@ export default function WalletPage() {
           <p className="text-white/65 text-sm">Track your Time Credits and session transactions.</p>
         </div>
         <div className="flex gap-3">
-          <button className="glass-button px-5 py-2.5 text-sm font-semibold text-white/95 flex items-center gap-2">
-            <History size={18} /> History
+          <button 
+            onClick={() => fetchWalletData()}
+            className="glass-button px-5 py-2.5 text-sm font-semibold text-white/95 flex items-center gap-2"
+          >
+            <History size={18} /> Sync Wallet
           </button>
         </div>
       </motion.div>
@@ -100,7 +143,7 @@ export default function WalletPage() {
           <div>
             <span className="text-sm text-white/40 font-medium uppercase tracking-wider">Total Balance</span>
             <div className="text-5xl font-bold text-white/95 mt-2 flex items-baseline gap-2">
-              {user?.credits}
+              {loading ? <Loader2 className="animate-spin text-cyan-400" /> : <AnimatedNumber value={walletData.credits} />}
               <span className="text-lg text-cyan-400/80 font-medium">Credits</span>
             </div>
           </div>
@@ -126,8 +169,8 @@ export default function WalletPage() {
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="name" stroke="rgba(255,255,255,0.3)" fontSize={12} tickLine={false} axisLine={false} />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                  itemStyle={{ color: '#22D3EE' }}
+                   contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                   itemStyle={{ color: '#22D3EE' }}
                 />
                 <Area type="monotone" dataKey="earned" stroke="#22D3EE" fillOpacity={1} fill="url(#colorEarned)" strokeWidth={2} />
               </AreaChart>
@@ -143,24 +186,34 @@ export default function WalletPage() {
           <button className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors">See All</button>
         </div>
         <div className="divide-y divide-white/5">
-          {TRANSACTIONS.map((tx) => (
-            <div key={tx.id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors group">
-              <div className="flex items-center gap-4">
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center border border-white/10 shadow-lg ${
-                  tx.status === 'Earned' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'
-                }`}>
-                  {tx.status === 'Earned' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+          {loading ? (
+             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-cyan-400 w-10 h-10" /></div>
+          ) : walletData.transactions.length === 0 ? (
+            <div className="p-10 text-center text-white/40">No transactions found.</div>
+          ) : (
+            walletData.transactions.map((tx) => (
+              <div key={tx._id} className="p-5 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                <div className="flex items-center gap-4">
+                  <div className={cn(
+                    "w-10 h-10 rounded-full flex items-center justify-center border border-white/10 shadow-lg",
+                    (tx.type === 'earned' || tx.type === 'bonus') ? 'bg-emerald-400/10 text-emerald-400' : 'bg-red-400/10 text-red-400'
+                  )}>
+                    {(tx.type === 'earned' || tx.type === 'bonus') ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-white/95 group-hover:text-white transition-colors">{tx.description}</p>
+                    <p className="text-xs text-white/40">{new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-sm font-bold text-white/95 group-hover:text-white transition-colors">{tx.title}</p>
-                  <p className="text-xs text-white/40">{tx.date}</p>
+                <div className={cn(
+                  "text-sm font-bold",
+                  (tx.type === 'earned' || tx.type === 'bonus') ? 'text-emerald-400' : 'text-white/95'
+                )}>
+                  {(tx.type === 'earned' || tx.type === 'bonus') ? '+' : '-'}{tx.amount.toFixed(1)} <span className="text-[10px] uppercase opacity-60">Credits</span>
                 </div>
               </div>
-              <div className={`text-sm font-bold ${tx.status === 'Earned' ? 'text-emerald-400' : 'text-white/95'}`}>
-                {tx.amount} <span className="text-[10px] uppercase opacity-60">Credits</span>
-              </div>
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </motion.div>
 

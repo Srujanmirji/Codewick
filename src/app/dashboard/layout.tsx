@@ -8,6 +8,9 @@ import { Sidebar } from "@/components/Sidebar";
 import { Navbar } from "@/components/Navbar";
 import { ToastContainer } from "@/components/ui/Toast";
 
+import { useUserStore } from "@/store/useUserStore";
+import { toast } from "@/store/useToastStore";
+
 export default function DashboardLayout({
   children,
 }: {
@@ -15,6 +18,8 @@ export default function DashboardLayout({
 }) {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const { setUser } = useUserStore();
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const hlsUrl = "https://stream.mux.com/r6pXRAJb3005XEEbl1hYU1x01RFJDSn7KQApwNGgAHHbU.m3u8";
 
@@ -28,7 +33,6 @@ export default function DashboardLayout({
           await video.play();
         }
       } catch (err: any) {
-        // Silently handle AbortError which occurs when play is interrupted by browser power saving
         if (err.name !== 'AbortError') {
           console.warn("Video playback failed:", err);
         }
@@ -53,12 +57,39 @@ export default function DashboardLayout({
     }
   }, [hlsUrl]);
 
-  // Onboarding guard: redirect if user hasn't completed onboarding
+  // Onboarding guard
   useEffect(() => {
     if (status === "authenticated" && !(session?.user as any)?.onboardingComplete) {
       router.replace("/onboarding");
     }
   }, [status, session, router]);
+
+  // Sync user data
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch('/api/wallet');
+        const data = await res.json();
+        if (data.error) throw new Error(data.error);
+
+        const mockUser = {
+          id: '1',
+          name: session?.user?.name || 'Alex Developer',
+          email: session?.user?.email || 'alex@skillswap.local',
+          avatarUrl: session?.user?.image || 'https://api.dicebear.com/7.x/avataaars/svg?seed=Alex',
+          credits: data.credits,
+          trustScore: data.trustScore,
+          trustLevel: data.trustScore >= 90 ? 'Elite' : data.trustScore >= 75 ? 'Trusted' : data.trustScore >= 50 ? 'Verified' : 'Newbie',
+          completionRate: 92,
+        };
+        // @ts-ignore
+        setUser(mockUser);
+      } catch (error) {
+        console.error("Failed to sync user:", error);
+      }
+    };
+    fetchUser();
+  }, [setUser, session]);
 
   return (
     <div className="flex h-screen w-full relative overflow-hidden bg-black">

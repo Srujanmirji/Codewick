@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { 
   ArrowRight, Star, Hexagon, Triangle, Circle, Square, Infinity, 
   RefreshCw, Zap, ShieldCheck, Clock, 
@@ -5,7 +6,6 @@ import {
   Activity, CheckCircle, TrendingUp, Layout 
 } from "lucide-react";
 import Footer from "@/components/Footer";
-import Link from "next/link";
 
 export default function Home() {
   return (
@@ -21,7 +21,7 @@ export default function Home() {
 
       <div className="relative z-10 max-w-[1400px] mx-auto px-6 lg:px-12 flex flex-col min-h-screen">
         
-        {/* Navbar - Refined to match image */}
+        {/* Navbar */}
         <header className="pt-8">
           <nav className="mx-auto w-full max-w-[1000px] flex items-center justify-between px-8 py-3 rounded-full bg-white/70 backdrop-blur-[20px] border border-black/5 shadow-[0_8px_32px_rgba(0,0,0,0.04)] transition-all duration-300">
             <div className="flex items-center gap-10">
@@ -33,10 +33,10 @@ export default function Home() {
               </div>
               
               <div className="hidden md:flex items-center gap-8 text-[#4B5563] font-semibold text-sm">
-                <Link href="#" className="hover:text-black transition-colors">Home</Link>
-                <Link href="#" className="hover:text-black transition-colors">Features</Link>
-                <Link href="#" className="hover:text-black transition-colors">Company</Link>
-                <Link href="#" className="hover:text-black transition-colors">Pricing</Link>
+                <Link href="/" className="hover:text-black transition-colors">Home</Link>
+                <Link href="#features" className="hover:text-black transition-colors">Features</Link>
+                <Link href="/dashboard" className="hover:text-black transition-colors">Dashboard</Link>
+                <Link href="/dashboard/marketplace" className="hover:text-black transition-colors">Marketplace</Link>
               </div>
             </div>
 
@@ -64,7 +64,7 @@ export default function Home() {
             </p>
 
             {/* CTA */}
-            <Link href="/login" className="group flex items-center gap-4 bg-[#3B82F6] hover:bg-[#2563EB] px-10 py-5 rounded-2xl text-white font-bold text-lg shadow-[0_20px_40px_-10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95">
+            <Link href="/dashboard/marketplace" className="group flex items-center gap-4 bg-[#3B82F6] hover:bg-[#2563EB] px-10 py-5 rounded-2xl text-white font-bold text-lg shadow-[0_20px_40px_-10px_rgba(59,130,246,0.5)] transition-all duration-300 hover:scale-[1.02] active:scale-95">
               Get Started Now
               <div className="bg-white rounded-full p-1.5 shadow-sm group-hover:translate-x-1 transition-transform duration-300">
                 <ArrowRight className="w-4 h-4 text-[#3B82F6]" />
@@ -87,7 +87,6 @@ export default function Home() {
             >
               <source src="https://future.co/images/homepage/glassy-orb/orb-purple.webm" type="video/webm" />
             </video>
-            {/* Overlay glow for extra vibrance matching image */}
             <div className="absolute inset-0 bg-gradient-to-tr from-blue-600/10 to-transparent rounded-full filter blur-[50px]"></div>
           </div>
         </div>

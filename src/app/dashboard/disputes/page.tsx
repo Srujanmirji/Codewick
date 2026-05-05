@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon } from "lucide-react";
+import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon, Loader2, Cpu, CheckCircle2 } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 import { toast } from "@/store/useToastStore";
@@ -30,39 +30,42 @@ const INITIAL_DISPUTES = [
 ];
 
 export default function DisputesPage() {
-  const [disputes, setDisputes] = useState(INITIAL_DISPUTES);
+  const [disputes, setDisputes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   
-  // Form state
-  const [newDispute, setNewDispute] = useState({
-    session: "UX Mentoring (Sarah)",
-    reason: "Partner did not show up",
-    description: ""
-  });
+  useEffect(() => {
+    fetchDisputes();
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const fetchDisputes = async () => {
+    try {
+      const res = await fetch('/api/disputes');
+      const data = await res.json();
+      setDisputes(data);
+    } catch (error) {
+      toast.error("Failed to load disputes");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResolve = async (id: string) => {
     setIsSubmitting(true);
-    
-    // Simulate submission
-    setTimeout(() => {
-      const id = disputes.length + 1;
-      const newItem = {
-        id,
-        title: `${newDispute.reason} in '${newDispute.session.split(': ')[1] || newDispute.session}'`,
-        partner: newDispute.session.match(/\((.*?)\)/)?.[1] || "Partner",
-        status: "In Review",
-        date: "Just Now",
-        severity: "High"
-      };
-
-      setDisputes([newItem, ...disputes]);
-      setIsModalOpen(false);
+    toast.info("AI Mediator is analyzing your case...");
+    try {
+      const res = await fetch(`/api/disputes/${id}/resolve`, { method: 'POST' });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      
+      toast.success("AI Verdict Issued: " + data.resolution.verdict);
+      fetchDisputes();
+    } catch (error) {
+      toast.error("AI mediation failed. Please try again.");
+    } finally {
       setIsSubmitting(false);
-      setNewDispute({ session: "UX Mentoring (Sarah)", reason: "Partner did not show up", description: "" });
-      toast.success("Dispute raised successfully! It is now visible in your list.");
-    }, 1500);
+    }
   };
 
   return (
@@ -100,61 +103,92 @@ export default function DisputesPage() {
       {/* Disputes List */}
       <div className="grid grid-cols-1 gap-4">
         <AnimatePresence mode="popLayout">
-          {disputes.map((dispute) => (
-            <motion.div
-              key={dispute.id}
-              layout
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              variants={itemVariants}
-              className="liquid-glass p-6 group flex flex-col md:flex-row items-center justify-between gap-6 relative"
-            >
-              {dispute.date === "Just Now" && (
-                <div className="absolute top-2 right-2 flex gap-1">
-                  <div className="w-1.5 h-1.5 bg-amber-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.8)]"></div>
-                </div>
-              )}
-              <div className="flex items-center gap-5 w-full md:w-auto">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 ${
-                  dispute.status === 'Resolved' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'
-                }`}>
-                  {dispute.status === 'Resolved' ? <ShieldCheck size={24} /> : <AlertTriangle size={24} />}
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white/95 group-hover:text-amber-400 transition-colors">{dispute.title}</h3>
-                  <div className="flex items-center gap-3 text-sm text-white/40 mt-1">
-                    <span>with {dispute.partner}</span>
-                    <span>•</span>
-                    <span>{dispute.date}</span>
+          {loading ? (
+             <div className="py-20 flex justify-center"><Loader2 className="animate-spin text-amber-400 w-10 h-10" /></div>
+          ) : disputes.length > 0 ? (
+            disputes.map((dispute) => (
+              <motion.div
+                key={dispute._id}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                variants={itemVariants}
+                className="liquid-glass p-6 group flex flex-col gap-6 relative"
+              >
+                <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                  <div className="flex items-center gap-5 w-full md:w-auto">
+                    <div className={cn(
+                      "w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10",
+                      dispute.status === 'resolved' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'
+                    )}>
+                      {dispute.status === 'resolved' ? <ShieldCheck size={24} /> : <AlertTriangle size={24} />}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white/95 group-hover:text-amber-400 transition-colors">{dispute.reason}</h3>
+                      <div className="flex items-center gap-3 text-sm text-white/40 mt-1">
+                        <span>Against {dispute.filedAgainst?.name}</span>
+                        <span>•</span>
+                        <span>{new Date(dispute.createdAt).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-4">
+                    <span className={cn(
+                      "text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-md border",
+                      dispute.status === 'resolved' ? 'text-emerald-400 border-emerald-400/20' : 'text-amber-400 border-amber-400/20'
+                    )}>
+                      {dispute.status}
+                    </span>
+                    {dispute.status === 'open' && (
+                      <button 
+                        onClick={() => handleResolve(dispute._id)}
+                        disabled={isSubmitting}
+                        className="glass-button-primary bg-cyan-500/10 border-cyan-400/30 text-cyan-400 px-4 py-2 rounded-lg text-xs font-bold flex items-center gap-2 hover:bg-cyan-500/20"
+                      >
+                        <Cpu size={14} /> AI Mediate
+                      </button>
+                    )}
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-between w-full md:w-auto md:gap-12">
-                <div className="flex flex-col md:items-end">
-                  <span className={`text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-md border ${
-                    dispute.status === 'Resolved' ? 'text-emerald-400 border-emerald-400/20' : 'text-amber-400 border-amber-400/20'
-                  }`}>
-                    {dispute.status}
-                  </span>
-                  <p className="text-xs text-white/40 mt-1">Severity: {dispute.severity}</p>
+                {/* Dispute Content */}
+                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
+                  <p className="text-xs text-white/40 uppercase font-bold mb-2">Evidence & Context</p>
+                  <p className="text-sm text-white/70 italic">"{dispute.evidence}"</p>
                 </div>
-                
-                <div className="flex items-center gap-3">
-                  <button className="glass-button p-2 text-white/40 hover:text-white/95 transition-all">
-                     <MessageSquare size={18} />
-                  </button>
-                  <button className="glass-button px-5 py-2 text-xs font-semibold text-white/95">
-                     Manage Case
-                  </button>
-                  <button className="p-2 rounded-full glass-button text-white/40 hover:text-white/95 transition-all">
-                    <ChevronRight size={18} />
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          ))}
+
+                {/* AI Verdict UI */}
+                {dispute.status === 'resolved' && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-5 rounded-2xl bg-cyan-400/5 border border-cyan-400/20 shadow-[0_0_40px_rgba(34,213,238,0.05)]"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 rounded-lg bg-cyan-400/20 text-cyan-400">
+                        <Cpu size={18} />
+                      </div>
+                      <span className="text-sm font-black text-cyan-400 uppercase tracking-tighter">AI Mediator Verdict</span>
+                    </div>
+                    <p className="text-sm text-white/90 leading-relaxed mb-4">
+                      {dispute.resolution}
+                    </p>
+                    <div className="flex gap-4">
+                       <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                          <CheckCircle2 size={14} /> Refund: {dispute.creditRefund} Credits
+                       </div>
+                    </div>
+                  </motion.div>
+                )}
+              </motion.div>
+            ))
+          ) : (
+            <div className="py-20 text-center liquid-glass">
+              <p className="text-white/40">No disputes found. Everything looks good!</p>
+            </div>
+          )}
         </AnimatePresence>
       </div>
 

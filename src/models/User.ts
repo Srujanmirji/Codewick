@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   image?: string;
+  avatarUrl?: string; // Kept for compatibility
   banner?: string;
   onboardingComplete: boolean;
   skillsOffered: string[];
@@ -13,6 +14,10 @@ export interface IUser extends Document {
   availability: string[];
   bio: string;
   portfolioUrl?: string;
+  timeCredits: number;
+  trustScore: number;
+  trustLevel: 'Newbie' | 'Verified' | 'Trusted' | 'Elite';
+  lastActiveAt: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,9 +36,12 @@ const UserSchema: Schema = new Schema(
     },
     password: {
       type: String,
-      select: false, // Don't return password by default
+      select: false,
     },
     image: {
+      type: String,
+    },
+    avatarUrl: {
       type: String,
     },
     banner: {
@@ -46,18 +54,10 @@ const UserSchema: Schema = new Schema(
     skillsOffered: {
       type: [String],
       default: [],
-      validate: {
-        validator: (v: string[]) => v.length <= 5,
-        message: 'You can offer up to 5 skills',
-      },
     },
     skillsWanted: {
       type: [String],
       default: [],
-      validate: {
-        validator: (v: string[]) => v.length <= 5,
-        message: 'You can want up to 5 skills',
-      },
     },
     skillLevel: {
       type: String,
@@ -75,11 +75,27 @@ const UserSchema: Schema = new Schema(
     portfolioUrl: {
       type: String,
     },
+    timeCredits: { 
+      type: Number, 
+      default: 2 
+    },
+    trustScore: { 
+      type: Number, 
+      default: 50 
+    },
+    trustLevel: { 
+      type: String, 
+      enum: ['Newbie', 'Verified', 'Trusted', 'Elite'], 
+      default: 'Newbie' 
+    },
+    lastActiveAt: { 
+      type: Date, 
+      default: Date.now 
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Prevent re-compilation of the model in Next.js development mode
 export default mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
