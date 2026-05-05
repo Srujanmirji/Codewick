@@ -3,6 +3,7 @@
 import { Session } from "@/lib/api";
 import { Calendar, Video, XCircle, Clock } from "lucide-react";
 import { format, formatDistanceToNow, isFuture } from "date-fns";
+import { toast } from "@/store/useToastStore";
 
 export function ActiveSessions({ sessions }: { sessions: Session[] }) {
   if (sessions.length === 0) {
@@ -52,13 +53,13 @@ export function ActiveSessions({ sessions }: { sessions: Session[] }) {
                   </span>
                   <div className="absolute inset-0 flex gap-2 opacity-0 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 justify-end">
                     <button 
-                      onClick={() => alert("Session cancellation requested.")}
+                      onClick={() => toast.info("Session cancellation requested.")}
                       className="text-[9px] bg-red-400/5 hover:bg-red-400/10 text-red-400/80 px-3 py-1 rounded-full flex items-center gap-1 border border-white/5 hover:border-red-400/20 transition-all uppercase tracking-wider font-bold active:scale-90"
                     >
                       Cancel
                     </button>
                     <button 
-                      onClick={() => alert(`Joining ${session.skill} session...`)}
+                      onClick={() => toast.success(`Joining ${session.skill} session...`)}
                       className="text-[9px] glass-button-primary px-3 py-1 rounded-full flex items-center gap-1 text-white/95 uppercase tracking-wider font-bold active:scale-90"
                     >
                       Join

@@ -10,6 +10,10 @@ interface User {
   trustLevel: 'Newbie' | 'Verified' | 'Trusted' | 'Elite';
   completionRate: number;
   credits: number;
+  linkedinUrl?: string;
+  githubUrl?: string;
+  portfolioUrl?: string;
+  bio?: string;
 }
 
 interface UserState {

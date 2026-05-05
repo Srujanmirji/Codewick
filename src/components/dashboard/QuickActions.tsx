@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { HandHelping, GraduationCap, PlayCircle, ShieldAlert, Send } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
+import { toast } from "@/store/useToastStore";
 
 const actions = [
   { id: "request", label: "Request Skill", icon: HandHelping, color: "text-cyan-400" },
@@ -27,7 +28,7 @@ export function QuickActions() {
             />
             <button 
               onClick={() => {
-                alert("Request sent successfully!");
+                toast.success("Request sent successfully!");
                 setActiveModal(null);
               }}
               className="w-full glass-button-primary py-3 flex items-center justify-center gap-2 font-bold active:scale-[0.98] transition-transform"
@@ -46,7 +47,7 @@ export function QuickActions() {
             />
             <button 
               onClick={() => {
-                alert("Listing created successfully!");
+                toast.success("Listing created successfully!");
                 setActiveModal(null);
               }}
               className="w-full glass-button py-3 border-indigo-400/30 text-indigo-400 hover:bg-indigo-400/10 flex items-center justify-center gap-2 font-bold active:scale-[0.98] transition-transform"
@@ -65,7 +66,7 @@ export function QuickActions() {
             <p className="text-white/60 text-sm">We'll connect you with your mentor in just a moment.</p>
             <button 
               onClick={() => {
-                alert("Searching for mentors...");
+                toast.info("Searching for mentors...");
                 setActiveModal(null);
               }}
               className="w-full glass-button-primary bg-teal-500 hover:bg-teal-400 py-3 font-bold mt-4 active:scale-[0.98] transition-transform"
@@ -84,7 +85,7 @@ export function QuickActions() {
             />
             <button 
               onClick={() => {
-                alert("Dispute submitted. Our team will review it shortly.");
+                toast.warning("Dispute submitted. Our team will review it shortly.");
                 setActiveModal(null);
               }}
               className="w-full bg-amber-500/20 border border-amber-500/30 text-amber-500 hover:bg-amber-500/30 py-3 rounded-xl font-bold transition-all active:scale-[0.98] transition-transform"
