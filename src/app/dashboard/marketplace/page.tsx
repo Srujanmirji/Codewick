@@ -51,22 +51,23 @@ export default function MarketplacePage() {
   const [selectedListing, setSelectedListing] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Form states
   const [newListing, setNewListing] = useState({
     skillOffered: "",
     skillWanted: "",
     description: "",
+    category: "Development",
     creditCost: 1,
   });
   const [requestMessage, setRequestMessage] = useState("");
 
   useEffect(() => {
     fetchListings();
-  }, [searchQuery]);
+  }, [searchQuery, activeCategory]);
 
   const fetchListings = async () => {
     try {
-      const res = await fetch(`/api/marketplace/listings?q=${searchQuery}`);
+      const categoryParam = activeCategory !== 'All Skills' ? `&category=${activeCategory}` : '';
+      const res = await fetch(`/api/marketplace/listings?q=${searchQuery}${categoryParam}`);
       const data = await res.json();
       setListings(data);
     } catch (error) {
@@ -323,6 +324,18 @@ export default function MarketplacePage() {
               value={newListing.description}
               onChange={(e) => setNewListing({...newListing, description: e.target.value})}
             />
+          </div>
+          <div className="space-y-2">
+            <label className="text-xs font-bold text-white/40 uppercase tracking-widest">Category</label>
+            <select
+              value={newListing.category}
+              onChange={(e) => setNewListing({...newListing, category: e.target.value})}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:border-cyan-400/50 outline-none transition-all appearance-none cursor-pointer"
+            >
+              {CATEGORIES.filter(c => c !== 'All Skills').map(cat => (
+                <option key={cat} value={cat} className="bg-[#0f172a]">{cat}</option>
+              ))}
+            </select>
           </div>
           <div className="space-y-2">
             <label className="text-xs font-bold text-white/40 uppercase tracking-widest">Credit Cost</label>

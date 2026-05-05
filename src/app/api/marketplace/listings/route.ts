@@ -11,6 +11,7 @@ export async function GET(request: Request) {
     const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
     const query = searchParams.get('q');
+    const category = searchParams.get('category');
 
     let filter: any = { status: 'open' };
     
@@ -22,11 +23,46 @@ export async function GET(request: Request) {
       }
     }
 
-    if (query) {
+    // Category filter — match by category field OR by skill/description keywords
+    if (category && category !== 'All Skills') {
+      const categoryKeywords: Record<string, string[]> = {
+        'Design': ['design', 'ui', 'ux', 'figma', 'graphic', 'logo', 'illustration', 'photoshop', 'css', 'tailwind', 'branding', 'wireframe'],
+        'Development': ['development', 'coding', 'programming', 'react', 'next', 'node', 'javascript', 'typescript', 'python', 'java', 'api', 'web', 'app', 'full-stack', 'frontend', 'backend', 'html', 'database', 'sql', 'mongodb'],
+        'Marketing': ['marketing', 'seo', 'social media', 'ads', 'content', 'copywriting', 'email', 'growth', 'analytics', 'branding', 'strategy'],
+        'Languages': ['language', 'english', 'spanish', 'french', 'german', 'chinese', 'japanese', 'arabic', 'hindi', 'korean', 'translation', 'speaking', 'writing'],
+        'Business': ['business', 'finance', 'accounting', 'management', 'startup', 'entrepreneurship', 'excel', 'powerpoint', 'leadership', 'consulting', 'project management'],
+        'Photography': ['photography', 'photo', 'camera', 'lightroom', 'editing', 'video', 'film', 'cinematography', 'drone', 'portrait'],
+      };
+
+      const keywords = categoryKeywords[category] || [category.toLowerCase()];
+      const keywordRegex = keywords.join('|');
+
       filter.$or = [
-        { skillOffered: { $regex: query, $options: 'i' } },
-        { skillWanted: { $regex: query, $options: 'i' } }
+        { category: category },
+        { skillOffered: { $regex: keywordRegex, $options: 'i' } },
+        { skillWanted: { $regex: keywordRegex, $options: 'i' } },
+        { description: { $regex: keywordRegex, $options: 'i' } }
       ];
+    }
+
+    if (query) {
+      const searchConditions = [
+        { skillOffered: { $regex: query, $options: 'i' } },
+        { skillWanted: { $regex: query, $options: 'i' } },
+        { description: { $regex: query, $options: 'i' } }
+      ];
+
+      // If we already have $or from category, combine with $and
+      if (filter.$or) {
+        const categoryOr = filter.$or;
+        delete filter.$or;
+        filter.$and = [
+          { $or: categoryOr },
+          { $or: searchConditions }
+        ];
+      } else {
+        filter.$or = searchConditions;
+      }
     }
 
     const listings = await SkillListing.find(filter)

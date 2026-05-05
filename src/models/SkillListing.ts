@@ -5,6 +5,7 @@ export interface ISkillListing extends Document {
   skillOffered: string;
   skillWanted: string;
   description: string;
+  category: string;
   creditCost: number;
   status: 'open' | 'in-progress' | 'completed' | 'cancelled';
   createdAt: Date;
@@ -15,6 +16,7 @@ const SkillListingSchema: Schema = new Schema({
   skillOffered: { type: String, required: true },
   skillWanted: { type: String, required: true },
   description: { type: String, required: true },
+  category: { type: String, default: 'All Skills' },
   creditCost: { type: Number, default: 1 },
   status: { 
     type: String, 
