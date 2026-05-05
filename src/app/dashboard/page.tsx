@@ -29,13 +29,13 @@ export default function DashboardPage() {
   if (loading || !data) {
     return (
       <div className="flex-1 w-full max-w-7xl mx-auto flex flex-col space-y-6">
-        <div className="flex items-center justify-between liquid-glass-static p-6 rounded-[24px]">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center liquid-glass-static p-6 rounded-[24px] gap-4">
           <div>
-            <h1 className="text-3xl font-fustat font-bold text-white mb-1 drop-shadow-md">Dashboard</h1>
-            <p className="text-gray-300">Welcome back! Here's what's happening with your account.</p>
+            <h1 className="text-3xl font-fustat font-bold text-white/95 mb-1 drop-shadow-sm">Dashboard</h1>
+            <p className="text-white/65">Welcome back! Here's what's happening with your account.</p>
           </div>
-          <div className="text-sm text-gray-300 flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.1)]">
-            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-pulse shadow-[0_0_8px_rgba(34,213,238,0.8)]"></span>
+          <div className="text-sm text-white/65 flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)]">
+            <span className="w-2.5 h-2.5 rounded-full bg-cyan-400/80 animate-pulse shadow-[0_0_5px_rgba(34,213,238,0.5)]"></span>
             Live updating connected
           </div>
         </div>
