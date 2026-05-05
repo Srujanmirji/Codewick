@@ -38,3 +38,49 @@ export async function GET() {
     );
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
+      return NextResponse.json(
+        { message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const body = await req.json();
+    const { image, banner } = body;
+
+    await connectToDatabase();
+
+    const updateData: any = {};
+    if (image !== undefined) updateData.image = image;
+    if (banner !== undefined) updateData.banner = banner;
+
+    const updatedUser = await User.findOneAndUpdate(
+      { email: session.user.email },
+      updateData,
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return NextResponse.json(
+        { message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(
+      { user: updatedUser },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Profile update error:", error);
+    return NextResponse.json(
+      { message: "An error occurred updating the profile" },
+      { status: 500 }
+    );
+  }
+}

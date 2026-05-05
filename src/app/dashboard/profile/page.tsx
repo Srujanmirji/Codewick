@@ -34,6 +34,7 @@ interface UserProfile {
   availability?: string[];
   portfolioUrl?: string;
   createdAt?: string;
+  banner?: string;
 }
 
 export default function ProfilePage() {
@@ -63,16 +64,33 @@ export default function ProfilePage() {
     fetchProfile();
   }, []);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
-      reader.onloadend = () => {
+      reader.onloadend = async () => {
         const result = reader.result as string;
+        
+        // Update local state for immediate feedback
         if (type === 'avatar') {
           updateUser({ avatarUrl: result });
+          if (profile) setProfile({ ...profile, image: result });
         } else {
           updateUser({ bannerUrl: result });
+          if (profile) setProfile({ ...profile, banner: result });
+        }
+
+        // Save to Database
+        try {
+          await fetch("/api/user/profile", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(
+              type === 'avatar' ? { image: result } : { banner: result }
+            )
+          });
+        } catch (error) {
+          console.error("Failed to update profile image", error);
         }
       };
       reader.readAsDataURL(file);
@@ -92,8 +110,8 @@ export default function ProfilePage() {
   // Use DB data first, fallback to session data
   const displayName = profile?.name || session?.user?.name || "User";
   const displayEmail = profile?.email || session?.user?.email || "";
-  const displayAvatar = localUser?.avatarUrl || profile?.image || session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`;
-  const bannerUrl = localUser?.bannerUrl; // keep banner local for now until we add DB support
+  const displayAvatar = profile?.image || localUser?.avatarUrl || session?.user?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`;
+  const bannerUrl = profile?.banner || localUser?.bannerUrl;
 
   const memberSince = profile?.createdAt ? new Date(profile.createdAt).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : "Recently";
 

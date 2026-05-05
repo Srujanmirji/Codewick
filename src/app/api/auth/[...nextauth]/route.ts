@@ -64,6 +64,10 @@ export const authOptions: NextAuthOptions = {
             (user as any).id = newUser._id.toString();
             (user as any).onboardingComplete = false;
           } else {
+            if (user.image && existingUser.image !== user.image) {
+              existingUser.image = user.image;
+              await existingUser.save();
+            }
             (user as any).id = existingUser._id.toString();
             (user as any).onboardingComplete = existingUser.onboardingComplete;
           }

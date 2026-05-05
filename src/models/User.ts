@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password?: string;
   image?: string;
+  banner?: string;
   onboardingComplete: boolean;
   skillsOffered: string[];
   skillsWanted: string[];
@@ -33,6 +34,9 @@ const UserSchema: Schema = new Schema(
       select: false, // Don't return password by default
     },
     image: {
+      type: String,
+    },
+    banner: {
       type: String,
     },
     onboardingComplete: {
