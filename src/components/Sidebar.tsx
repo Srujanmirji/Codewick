@@ -15,7 +15,9 @@ import {
   ChevronLeft,
   LogOut,
   X,
-  AlertCircle
+  AlertCircle,
+  LayoutGrid,
+  CloudUpload
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -26,6 +28,7 @@ const NAV_ITEMS = [
   { name: "Dashboard", icon: Home, href: "/dashboard" },
   { name: "My Sessions", icon: CalendarCheck, href: "/dashboard/sessions" },
   { name: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
+  { name: "Host Hub", icon: LayoutGrid, href: "/dashboard/host" },
   { name: "Messages", icon: MessageSquare, href: "/dashboard/messages" },
   { name: "Wallet", icon: Wallet, href: "/dashboard/wallet" },
   { name: "Disputes", icon: AlertTriangle, href: "/dashboard/disputes" },
