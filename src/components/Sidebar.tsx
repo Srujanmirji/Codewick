@@ -39,6 +39,7 @@ const NAV_ITEMS = [
 export function Sidebar() {
   const { sidebarOpen, toggleSidebar, user } = useUserStore();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
@@ -47,11 +48,59 @@ export function Sidebar() {
   };
 
   const confirmLogout = () => {
-    router.push("/");
+    setIsLogoutModalOpen(false);
+    setIsLoggingOut(true);
+    
+    // Smooth transition to landing page
+    setTimeout(() => {
+      router.push("/");
+    }, 1500);
   };
 
   return (
     <>
+      {/* Logout Transition Overlay */}
+      <AnimatePresence>
+        {isLoggingOut && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9999] bg-[#F8FAFC] flex items-center justify-center overflow-hidden"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: [0.5, 1.2, 1], opacity: 1 }}
+              transition={{ duration: 1, ease: "easeOut" }}
+              className="relative w-96 h-96"
+            >
+              <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full animate-pulse"></div>
+              <video 
+                autoPlay 
+                loop 
+                muted 
+                playsInline 
+                className="w-full h-full object-contain"
+                style={{ filter: "hue-rotate(-55deg) saturate(200%)" }}
+              >
+                <source src="https://future.co/images/homepage/glassy-orb/orb-purple.webm" type="video/webm" />
+              </video>
+            </motion.div>
+            
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="absolute bottom-20 flex flex-col items-center gap-4"
+            >
+              <div className="w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl">
+                <img src="/logo.png" alt="" className="w-full h-full object-cover" />
+              </div>
+              <p className="font-fustat font-black text-2xl tracking-tighter text-[#111827]">SkillSwap</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <motion.aside
         initial={false}
         animate={{ width: sidebarOpen ? 260 : 85 }}
@@ -79,7 +128,7 @@ export function Sidebar() {
         {/* Logo */}
         <div className="h-24 flex items-center px-[22px] overflow-hidden">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.2)] border border-white/15 bg-gradient-to-br from-white/10 to-transparent p-0.5">
+            <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.3)] border border-white/10 p-0.5">
               <img src="/logo.png" alt="SkillSwap Logo" className="w-full h-full object-cover rounded-xl" />
             </div>
             <AnimatePresence mode="wait">
