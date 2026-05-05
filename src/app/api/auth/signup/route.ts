@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import bcrypt from "bcryptjs";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
+import PlatformSettings from "@/models/PlatformSettings";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,6 +16,15 @@ export async function POST(req: NextRequest) {
     }
 
     await connectToDatabase();
+
+    // 🚫 Panic Switch: Check if signups are disabled
+    const settings = await PlatformSettings.findOne({});
+    if (settings?.disableSignups) {
+      return NextResponse.json(
+        { message: "New registrations are temporarily disabled. Please try again later." },
+        { status: 503 }
+      );
+    }
 
     const existingUser = await User.findOne({ email });
 

@@ -5,20 +5,22 @@ import connectDB from '@/lib/db';
 import Dispute from '@/models/Dispute';
 import Session from '@/models/Session';
 import User from '@/models/User';
+import { notifyDisputeFiled } from '@/lib/notifications';
 
 export async function GET() {
   try {
     await connectDB();
-    const sessionAuth = await getServerSession(authOptions);
-    if (!sessionAuth?.user?.email) {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const dbUser = await User.findOne({ email: sessionAuth.user.email });
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const disputes = await Dispute.find({
-      $or: [{ filedBy: dbUser._id }, { filedAgainst: dbUser._id }]
+      $or: [{ filedBy: user._id }, { filedAgainst: user._id }]
     })
     .populate('filedBy', 'name')
     .populate('filedAgainst', 'name')
@@ -34,35 +36,50 @@ export async function GET() {
 export async function POST(request: Request) {
   try {
     await connectDB();
-    const { sessionId, reason, evidence } = await request.json();
+    const session = await getServerSession(authOptions);
 
-    const sessionAuth = await getServerSession(authOptions);
-    if (!sessionAuth?.user?.email) {
+    if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const dbUser = await User.findOne({ email: sessionAuth.user.email });
-    if (!dbUser) return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    const { sessionId, reason, evidence, evidenceUrls } = await request.json();
 
-    const session = await Session.findById(sessionId);
-    if (!session) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+    const user = await User.findOne({ email: session.user.email });
+    if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    const filedAgainst = session.providerId.toString() === dbUser._id.toString() 
-      ? session.learnerId 
-      : session.providerId;
+    const skillSession = await Session.findById(sessionId);
+    if (!skillSession) return NextResponse.json({ error: 'Session not found' }, { status: 404 });
+
+    const filedAgainst = skillSession.providerId.toString() === user._id.toString() 
+      ? skillSession.learnerId 
+      : skillSession.providerId;
+
+    // Validate evidence URLs if provided
+    const validUrls = (evidenceUrls || []).filter((url: string) => {
+      try {
+        new URL(url);
+        return true;
+      } catch {
+        return false;
+      }
+    }).slice(0, 5); // Max 5 evidence URLs
 
     const dispute = await Dispute.create({
       sessionId,
-      filedBy: dbUser._id,
+      filedBy: user._id,
       filedAgainst,
       reason,
       evidence,
-      status: 'open'
+      evidenceUrls: validUrls,
+      status: 'awaiting-response' // Wait for accused to respond first
     });
 
     // Mark session as disputed
-    session.status = 'disputed';
-    await session.save();
+    skillSession.status = 'disputed';
+    await skillSession.save();
+
+    // Notify the accused party
+    await notifyDisputeFiled(filedAgainst.toString(), dispute._id.toString(), reason);
 
     return NextResponse.json(dispute);
   } catch (error: any) {

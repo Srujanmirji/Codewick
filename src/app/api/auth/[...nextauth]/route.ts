@@ -42,6 +42,7 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           image: user.image,
           onboardingComplete: user.onboardingComplete,
+          isAdmin: user.isAdmin,
         };
       }
     })
@@ -52,17 +53,19 @@ export const authOptions: NextAuthOptions = {
       if (account?.provider === "google") {
         await connectToDatabase();
         try {
-          const existingUser = await User.findOne({ email: user.email });
+          const existingUser = await User.findOne({ email: { $regex: new RegExp(`^${user.email}$`, 'i') } });
           if (!existingUser) {
             const newUser = await User.create({
               name: user.name,
               email: user.email,
               image: user.image,
               onboardingComplete: false,
+              isAdmin: false,
             });
             // Attach DB id and onboarding status to the user object for JWT
             (user as any).id = newUser._id.toString();
             (user as any).onboardingComplete = false;
+            (user as any).isAdmin = false;
           } else {
             if (user.image && existingUser.image !== user.image) {
               existingUser.image = user.image;
@@ -70,6 +73,7 @@ export const authOptions: NextAuthOptions = {
             }
             (user as any).id = existingUser._id.toString();
             (user as any).onboardingComplete = existingUser.onboardingComplete;
+            (user as any).isAdmin = existingUser.isAdmin;
           }
           return true;
         } catch (error) {
@@ -80,13 +84,22 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async jwt({ token, user, trigger, session }) {
-      // On initial sign-in, copy user fields to the token
       if (user) {
         token.id = (user as any).id;
-        token.onboardingComplete = (user as any).onboardingComplete ?? false;
+        await connectToDatabase();
+        // Use case-insensitive regex for email lookup
+        const dbUser = await User.findOne({ email: { $regex: new RegExp(`^${user.email}$`, 'i') } });
+        if (dbUser) {
+          token.onboardingComplete = dbUser.onboardingComplete;
+          token.isAdmin = dbUser.isAdmin;
+          token.id = dbUser._id.toString();
+        } else {
+          token.onboardingComplete = (user as any).onboardingComplete ?? false;
+          token.isAdmin = (user as any).isAdmin ?? false;
+        }
       }
       // Allow manual session refresh after onboarding completion
-      if (trigger === "update" && session?.onboardingComplete) {
+      if (trigger === "update" && session?.onboardingComplete !== undefined) {
         token.onboardingComplete = session.onboardingComplete;
       }
       return token;
@@ -95,6 +108,7 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         (session.user as any).id = token.id;
         (session.user as any).onboardingComplete = token.onboardingComplete ?? false;
+        (session.user as any).isAdmin = token.isAdmin ?? false;
       }
       return session;
     },
@@ -108,6 +122,7 @@ export const authOptions: NextAuthOptions = {
   },
   session: {
     strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/login",

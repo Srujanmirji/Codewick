@@ -5,12 +5,12 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Sparkles, Lightbulb, BarChart3, Clock, PenLine, Link2,
+  Sparkles, Lightbulb, BarChart3, Clock, PenLine, Link2, Phone,
   ArrowRight, ArrowLeft, Check, Loader2, SkipForward,
 } from "lucide-react";
 import { TagInput } from "@/components/onboarding/TagInput";
 
-const TOTAL_STEPS = 6;
+const TOTAL_STEPS = 7;
 
 const STEP_META = [
   { title: "Skills You Offer", subtitle: "What can you teach others?", icon: Sparkles },
@@ -18,6 +18,7 @@ const STEP_META = [
   { title: "Your Skill Level", subtitle: "How experienced are you overall?", icon: BarChart3 },
   { title: "Availability", subtitle: "When are you free to swap?", icon: Clock },
   { title: "Short Bio", subtitle: "Tell us about yourself", icon: PenLine },
+  { title: "Phone Number", subtitle: "So your matches can reach you", icon: Phone },
   { title: "Portfolio Link", subtitle: "Optional — share your work", icon: Link2 },
 ];
 
@@ -46,6 +47,7 @@ export default function OnboardingPage() {
   const [skillLevel, setSkillLevel] = useState<string>("");
   const [availability, setAvailability] = useState<string[]>([]);
   const [bio, setBio] = useState("");
+  const [phone, setPhone] = useState("");
   const [portfolioUrl, setPortfolioUrl] = useState("");
 
   // Redirect if not logged in or already onboarded
@@ -65,12 +67,13 @@ export default function OnboardingPage() {
       case 2: return skillLevel !== "";
       case 3: return availability.length >= 1;
       case 4: return bio.trim().length > 0;
-      case 5: return true; // optional
+      case 5: return true; // phone is optional
+      case 6: return true; // portfolio is optional
       default: return false;
     }
   };
 
-  const isSkippable = step === 5;
+  const isSkippable = step === 5 || step === 6;
 
   const goNext = () => {
     if (step < TOTAL_STEPS - 1 && canProceed()) {
@@ -95,7 +98,7 @@ export default function OnboardingPage() {
       const res = await fetch("/api/onboarding", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ skillsOffered, skillsWanted, skillLevel, availability, bio, portfolioUrl }),
+        body: JSON.stringify({ skillsOffered, skillsWanted, skillLevel, availability, bio, phone, portfolioUrl }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -278,6 +281,25 @@ export default function OnboardingPage() {
                 )}
 
                 {step === 5 && (
+                  <div>
+                    <label className="block text-sm font-inter font-medium text-white/70 mb-2">
+                      Your phone number <span className="text-white/30">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <input
+                        type="tel"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value.replace(/[^\d+\-\s()]/g, ''))}
+                        placeholder="+91 98765 43210"
+                        className="w-full bg-white/5 border border-white/10 text-white rounded-xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all font-inter text-sm placeholder-gray-500 hover:bg-white/[0.07]"
+                      />
+                    </div>
+                    <p className="text-xs font-inter text-white/30 mt-2">We'll never share your number publicly</p>
+                  </div>
+                )}
+
+                {step === 6 && (
                   <div>
                     <label className="block text-sm font-inter font-medium text-white/70 mb-2">
                       Portfolio or LinkedIn URL <span className="text-white/30">(optional)</span>

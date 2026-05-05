@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import connectToDatabase from "@/lib/mongodb";
 import User from "@/models/User";
+import Transaction from "@/models/Transaction";
 
 export async function POST(req: NextRequest) {
   try {
@@ -15,7 +16,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { skillsOffered, skillsWanted, skillLevel, availability, bio, portfolioUrl } = await req.json();
+    const { skillsOffered, skillsWanted, skillLevel, availability, bio, phone, portfolioUrl } = await req.json();
 
     // Validate required fields
     if (!skillsOffered || skillsOffered.length === 0) {
@@ -84,8 +85,10 @@ export async function POST(req: NextRequest) {
         skillLevel,
         availability,
         bio: bio.trim(),
+        phone: phone?.replace(/[^\d+]/g, '') || undefined,
         portfolioUrl: portfolioUrl?.trim() || undefined,
         onboardingComplete: true,
+        $setOnInsert: { timeCredits: 2, trustScore: 50 } // ensure defaults if missing
       },
       { returnDocument: 'after' }
     );
@@ -95,6 +98,25 @@ export async function POST(req: NextRequest) {
         { message: "User not found" },
         { status: 404 }
       );
+    }
+
+    // Trust Bootstrapping: Give 2 initial time-credits if they don't have a bonus transaction yet
+    const existingBonus = await Transaction.findOne({
+      receiverId: updatedUser._id,
+      type: 'bonus',
+      description: 'Initial onboarding bonus'
+    });
+
+    if (!existingBonus) {
+      await Transaction.create({
+        receiverId: updatedUser._id,
+        amount: 2,
+        type: 'bonus',
+        description: 'Initial onboarding bonus'
+      });
+      // Assuming defaults work, but just in case we need to explicitly set it:
+      // if updatedUser.timeCredits was 0 for some reason (old account), we could update it. 
+      // The schema default of 2 will cover new accounts.
     }
 
     return NextResponse.json(

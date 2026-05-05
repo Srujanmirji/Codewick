@@ -41,6 +41,20 @@ export async function POST(
       return NextResponse.json({ error: fraud.message }, { status: 400 });
     }
 
+    // Balance Check — learner must be able to afford the session
+    if (user.timeCredits < (listing.creditCost || 1)) {
+      return NextResponse.json({ 
+        error: `Insufficient credits. You need ${listing.creditCost || 1} credits but only have ${user.timeCredits}.` 
+      }, { status: 400 });
+    }
+
+    // Minimum Trust Score Gate — prevent exploitation by very low-trust users
+    if (user.trustScore < 10) {
+      return NextResponse.json({ 
+        error: 'Your trust score is too low to request sessions. Resolve any open disputes first.' 
+      }, { status: 403 });
+    }
+
     const skillRequest = await SkillRequest.create({
       listingId,
       requesterId: user._id,

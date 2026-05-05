@@ -6,7 +6,11 @@ export interface IDispute extends Document {
   filedAgainst: mongoose.Types.ObjectId | string;
   reason: string;
   evidence: string;
-  status: 'open' | 'under-review' | 'resolved';
+  evidenceUrls: string[]; // Image/screenshot URLs as proof
+  counterResponse?: string; // Accused party's response
+  counterEvidenceUrls?: string[]; // Accused party's evidence
+  respondedAt?: Date;
+  status: 'open' | 'awaiting-response' | 'under-review' | 'resolved';
   resolution?: string;
   creditRefund: number;
   createdAt: Date;
@@ -19,9 +23,13 @@ const DisputeSchema: Schema = new Schema({
   filedAgainst: { type: Schema.Types.ObjectId, ref: 'User', required: true },
   reason: { type: String, required: true },
   evidence: { type: String, required: true },
+  evidenceUrls: { type: [String], default: [] },
+  counterResponse: { type: String },
+  counterEvidenceUrls: { type: [String], default: [] },
+  respondedAt: { type: Date },
   status: { 
     type: String, 
-    enum: ['open', 'under-review', 'resolved'], 
+    enum: ['open', 'awaiting-response', 'under-review', 'resolved'], 
     default: 'open' 
   },
   resolution: { type: String },

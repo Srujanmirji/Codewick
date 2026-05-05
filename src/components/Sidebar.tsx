@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useSession, signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
@@ -10,14 +11,16 @@ import {
   MessageSquare, 
   Wallet, 
   AlertTriangle, 
-  User, 
+  User,
+  Users,
   Settings,
   ChevronLeft,
   LogOut,
   X,
   AlertCircle,
   LayoutGrid,
-  CloudUpload
+  CloudUpload,
+  ShieldAlert
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -28,6 +31,7 @@ const NAV_ITEMS = [
   { name: "Dashboard", icon: Home, href: "/dashboard" },
   { name: "My Sessions", icon: CalendarCheck, href: "/dashboard/sessions" },
   { name: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
+  { name: "Community", icon: Users, href: "/dashboard/community" },
   { name: "Host Hub", icon: LayoutGrid, href: "/dashboard/host" },
   { name: "Messages", icon: MessageSquare, href: "/dashboard/messages" },
   { name: "Wallet", icon: Wallet, href: "/dashboard/wallet" },
@@ -42,6 +46,12 @@ export function Sidebar() {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
+  const { data: session } = useSession();
+  
+  const isAdmin = (session?.user as any)?.isAdmin;
+  const items = isAdmin 
+    ? [...NAV_ITEMS, { name: "God Mode", icon: ShieldAlert, href: "/dashboard/admin" }] 
+    : NAV_ITEMS;
 
   const handleLogout = () => {
     setIsLogoutModalOpen(true);
@@ -52,8 +62,8 @@ export function Sidebar() {
     setIsLoggingOut(true);
     
     // Smooth transition to landing page
-    setTimeout(() => {
-      router.push("/");
+    setTimeout(async () => {
+      await signOut({ callbackUrl: "/" });
     }, 1500);
   };
 
@@ -149,7 +159,7 @@ export function Sidebar() {
 
         {/* Nav Links */}
         <div className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1.5 custom-scrollbar">
-          {NAV_ITEMS.map((item) => {
+          {items.map((item) => {
             const isActive = pathname === item.href;
             return (
               <Link key={item.name} href={item.href}>

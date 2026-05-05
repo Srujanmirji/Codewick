@@ -7,16 +7,19 @@ export interface IUser extends Document {
   image?: string;
   avatarUrl?: string; // Kept for compatibility
   banner?: string;
+  timeCredits: number;
+  trustScore: number;
   onboardingComplete: boolean;
   skillsOffered: string[];
   skillsWanted: string[];
   skillLevel: 'Beginner' | 'Intermediate' | 'Expert';
   availability: string[];
   bio: string;
+  phone?: string;
   portfolioUrl?: string;
-  timeCredits: number;
-  trustScore: number;
   trustLevel: 'Newbie' | 'Verified' | 'Trusted' | 'Elite';
+  isAdmin: boolean;
+  isBanned: boolean;
   lastActiveAt: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -47,6 +50,14 @@ const UserSchema: Schema = new Schema(
     banner: {
       type: String,
     },
+    timeCredits: {
+      type: Number,
+      default: 2,
+    },
+    trustScore: {
+      type: Number,
+      default: 50,
+    },
     onboardingComplete: {
       type: Boolean,
       default: false,
@@ -72,21 +83,25 @@ const UserSchema: Schema = new Schema(
       type: String,
       maxlength: [120, 'Bio cannot exceed 120 characters'],
     },
+    phone: {
+      type: String,
+      match: [/^\+?[1-9]\d{6,14}$/, 'Please provide a valid phone number'],
+    },
     portfolioUrl: {
       type: String,
-    },
-    timeCredits: { 
-      type: Number, 
-      default: 2 
-    },
-    trustScore: { 
-      type: Number, 
-      default: 50 
     },
     trustLevel: { 
       type: String, 
       enum: ['Newbie', 'Verified', 'Trusted', 'Elite'], 
       default: 'Newbie' 
+    },
+    isAdmin: {
+      type: Boolean,
+      default: false,
+    },
+    isBanned: {
+      type: Boolean,
+      default: false,
     },
     lastActiveAt: { 
       type: Date, 

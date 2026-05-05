@@ -59,7 +59,6 @@ export default function WalletPage() {
   const [isBuyModalOpen, setIsBuyModalOpen] = useState(false);
   const [selectedPack, setSelectedPack] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  
   const [loading, setLoading] = useState(true);
   const [walletData, setWalletData] = useState<{
     credits: number;

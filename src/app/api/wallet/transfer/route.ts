@@ -4,21 +4,29 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import connectDB from '@/lib/db';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
+import PlatformSettings from '@/models/PlatformSettings';
 import mongoose from 'mongoose';
 
 export async function POST(request: Request) {
   try {
     await connectDB();
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // 🧊 Panic Switch: Check if economy is frozen
+    const settings = await PlatformSettings.findOne({});
+    if (settings?.freezeEconomy) {
+      return NextResponse.json({ error: 'The platform economy is temporarily frozen. All transfers are paused.' }, { status: 503 });
+    }
     const { receiverEmail, amount, description } = await request.json();
 
     if (!receiverEmail || !amount || amount <= 0) {
       return NextResponse.json({ error: 'Invalid transfer details' }, { status: 400 });
     }
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const sender = await User.findOne({ email: session.user.email });
     const receiver = await User.findOne({ email: receiverEmail });
