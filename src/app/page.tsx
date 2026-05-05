@@ -4,7 +4,8 @@ import {
   PenTool, Users, Coins, 
   Activity, CheckCircle, TrendingUp, Layout 
 } from "lucide-react";
-
+import Footer from "@/components/Footer";
+import Link from "next/link";
 export default function Home() {
   return (
     <main className="relative min-h-screen bg-white overflow-hidden selection:bg-blue-100">
@@ -22,25 +23,25 @@ export default function Home() {
         {/* Navbar */}
         <nav className="sticky top-[30px] z-50 mx-auto w-fit flex items-center justify-between px-6 py-3 rounded-[16px] bg-white/30 backdrop-blur-[50px] border border-black/10 shadow-[inset_0px_4px_4px_0px_rgba(255,255,255,0.25)] transition-all duration-300 hover:bg-white/40">
           <div className="flex items-center gap-12">
-            <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center gap-3">
               <img src="/logo.png" alt="SkillSwap Logo" className="w-8 h-8 rounded-lg object-cover" />
               <span className="font-fustat font-bold text-2xl tracking-tight text-gray-900">SkillSwap</span>
-            </div>
+            </Link>
             
             <div className="hidden md:flex items-center gap-8 text-gray-700 font-inter font-medium text-sm">
-              <a href="#" className="hover:text-black transition-colors">Home</a>
-              <a href="#" className="hover:text-black transition-colors">Features</a>
-              <a href="#" className="hover:text-black transition-colors">Company</a>
-              <a href="#" className="hover:text-black transition-colors">Pricing</a>
+              <Link href="#" className="hover:text-black transition-colors">Home</Link>
+              <Link href="#" className="hover:text-black transition-colors">Features</Link>
+              <Link href="#" className="hover:text-black transition-colors">Company</Link>
+              <Link href="#" className="hover:text-black transition-colors">Pricing</Link>
             </div>
           </div>
 
-          <button className="ml-12 flex items-center gap-2 bg-white/50 hover:bg-white/70 backdrop-blur-md px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-900 border border-white/50 shadow-sm transition-all duration-300">
+          <Link href="/login" className="ml-12 flex items-center gap-2 bg-white/50 hover:bg-white/70 backdrop-blur-md px-5 py-2.5 rounded-xl text-sm font-semibold text-gray-900 border border-white/50 shadow-sm transition-all duration-300">
             SignUp
             <div className="bg-white rounded-full p-1 shadow-sm">
               <ArrowRight className="w-3 h-3 text-black" />
             </div>
-          </button>
+          </Link>
         </nav>
 
         {/* Hero Section */}
@@ -316,6 +317,7 @@ export default function Home() {
           </div>
         </div>
 
+        <Footer />
       </div>
     </main>
   );

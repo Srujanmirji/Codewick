@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
   --font-inter: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-fustat: var(--font-fustat), ui-sans-serif, system-ui, sans-serif;
+  --animate-aurora: aurora 60s linear infinite;
 }
 
 body {
@@ -138,4 +139,14 @@ body {
 
 .animate-float-slow-reverse {
   animation: float-slow-reverse 18s ease-in-out infinite;
+}
+
+@keyframes aurora {
+  from {
+    background-position: 50% 50%, 50% 50%;
+  }
+  to {
+    background-position: 350% 50%, 350% 50%;
+  }
+}
 }

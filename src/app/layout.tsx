@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Fustat, Inter } from "next/font/google";
 import "./globals.css";
-
+import { Providers } from "@/components/Providers";
 const fustat = Fustat({
   variable: "--font-fustat",
   subsets: ["latin"],
@@ -41,7 +41,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${fustat.variable} ${inter.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col font-inter">{children}</body>
+      <body className="min-h-full flex flex-col font-inter" suppressHydrationWarning>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   );
 }
