@@ -22,7 +22,10 @@ export default function Home() {
         {/* Navbar */}
         <nav className="sticky top-[30px] z-50 mx-auto w-fit flex items-center justify-between px-6 py-3 rounded-[16px] bg-white/30 backdrop-blur-[50px] border border-black/10 shadow-[inset_0px_4px_4px_0px_rgba(255,255,255,0.25)] transition-all duration-300 hover:bg-white/40">
           <div className="flex items-center gap-12">
-            <span className="font-fustat font-bold text-2xl tracking-tight text-gray-900">SkillSwap</span>
+            <div className="flex items-center gap-3">
+              <img src="/logo.png" alt="SkillSwap Logo" className="w-8 h-8 rounded-lg object-cover" />
+              <span className="font-fustat font-bold text-2xl tracking-tight text-gray-900">SkillSwap</span>
+            </div>
             
             <div className="hidden md:flex items-center gap-8 text-gray-700 font-inter font-medium text-sm">
               <a href="#" className="hover:text-black transition-colors">Home</a>

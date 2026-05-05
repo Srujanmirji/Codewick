@@ -50,8 +50,8 @@ export function Sidebar() {
       {/* Logo */}
       <div className="h-20 flex items-center px-6 overflow-hidden mt-2">
         <div className="flex items-center gap-3 w-48">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400/20 to-indigo-500/20 border border-white/10 flex items-center justify-center flex-shrink-0 shadow-[0_4px_20px_rgba(34,213,238,0.15)]">
-            <span className="font-bold text-white/95 font-fustat text-xl">S</span>
+          <div className="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0">
+            <img src="/logo.png" alt="SkillSwap Logo" className="w-full h-full object-cover" />
           </div>
           {sidebarOpen && (
             <motion.span 

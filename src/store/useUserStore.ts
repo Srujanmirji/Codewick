@@ -5,6 +5,7 @@ interface User {
   name: string;
   email: string;
   avatarUrl: string;
+  bannerUrl?: string;
   trustScore: number;
   trustLevel: 'Newbie' | 'Verified' | 'Trusted' | 'Elite';
   completionRate: number;
@@ -16,6 +17,7 @@ interface UserState {
   theme: 'light' | 'dark';
   sidebarOpen: boolean;
   setUser: (user: User) => void;
+  updateUser: (updates: Partial<User>) => void;
   toggleTheme: () => void;
   toggleSidebar: () => void;
 }
@@ -34,6 +36,9 @@ export const useUserStore = create<UserState>((set) => ({
   theme: 'dark',
   sidebarOpen: true,
   setUser: (user) => set({ user }),
+  updateUser: (updates) => set((state) => ({ 
+    user: state.user ? { ...state.user, ...updates } : null 
+  })),
   toggleTheme: () => set((state) => ({ theme: state.theme === 'light' ? 'dark' : 'light' })),
   toggleSidebar: () => set((state) => ({ sidebarOpen: !state.sidebarOpen })),
 }));

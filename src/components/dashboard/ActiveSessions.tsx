@@ -16,7 +16,7 @@ export function ActiveSessions({ sessions }: { sessions: Session[] }) {
   }
 
   return (
-    <div className="liquid-glass p-6 flex flex-col h-full relative overflow-hidden group/container">
+    <div className="liquid-glass p-6 flex flex-col h-[280px] relative overflow-hidden group/container">
       {/* Subtle background glow */}
       <div className="absolute top-0 right-1/4 w-32 h-32 bg-cyan-400/5 rounded-full blur-[40px] pointer-events-none"></div>
 
@@ -45,17 +45,26 @@ export function ActiveSessions({ sessions }: { sessions: Session[] }) {
                 </div>
               </div>
 
-              <div className="flex flex-col items-end gap-2 overflow-hidden">
-                <span className="text-xs font-semibold text-cyan-300 bg-cyan-400/10 px-2.5 py-1 rounded-full border border-cyan-400/20 backdrop-blur-sm group-hover:translate-x-full group-hover:opacity-0 transition-all duration-300 absolute">
-                  {isUpcoming ? `In ${formatDistanceToNow(sessionDate)}` : "Starting now"}
-                </span>
-                <div className="flex gap-2 opacity-0 translate-x-4 group-hover:translate-x-0 group-hover:opacity-100 transition-all duration-300">
-                  <button className="text-[10px] bg-red-400/5 hover:bg-red-400/10 text-red-400/80 px-4 py-1.5 rounded-full flex items-center gap-1.5 border border-white/5 hover:border-red-400/20 transition-all uppercase tracking-wider font-semibold">
-                    <XCircle className="w-3.5 h-3.5" /> Cancel
-                  </button>
-                  <button className="text-[10px] glass-button-primary px-4 py-1.5 rounded-full flex items-center gap-1.5 text-white/95 uppercase tracking-wider font-semibold">
-                    Join Session
-                  </button>
+              <div className="flex flex-col items-end gap-2 shrink-0">
+                <div className="relative h-6 w-full flex justify-end items-center">
+                  <span className="text-[10px] font-bold text-cyan-300 bg-cyan-400/10 px-2.5 py-1 rounded-full border border-cyan-400/20 backdrop-blur-sm group-hover:opacity-0 group-hover:-translate-y-2 transition-all duration-300 whitespace-nowrap">
+                    {isUpcoming ? `In ${formatDistanceToNow(sessionDate)}` : "Starting now"}
+                  </span>
+                  <div className="absolute inset-0 flex gap-2 opacity-0 translate-y-2 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 justify-end">
+                    <button 
+                      onClick={() => alert("Session cancellation requested.")}
+                      className="text-[9px] bg-red-400/5 hover:bg-red-400/10 text-red-400/80 px-3 py-1 rounded-full flex items-center gap-1 border border-white/5 hover:border-red-400/20 transition-all uppercase tracking-wider font-bold active:scale-90"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      onClick={() => alert(`Joining ${session.skill} session...`)}
+                      className="text-[9px] glass-button-primary px-3 py-1 rounded-full flex items-center gap-1 text-white/95 uppercase tracking-wider font-bold active:scale-90"
+                    >
+                      Join
+                    </button>
+                  </div>
+
                 </div>
               </div>
             </div>

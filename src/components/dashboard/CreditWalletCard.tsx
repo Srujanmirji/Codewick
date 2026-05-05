@@ -1,6 +1,7 @@
 "use client";
 
 import { useUserStore } from "@/store/useUserStore";
+import { useRouter } from "next/navigation";
 import { Clock, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { AreaChart, Area, ResponsiveContainer, CartesianGrid } from "recharts";
 
@@ -10,6 +11,7 @@ interface Props {
 
 export function CreditWalletCard({ data }: Props) {
   const { user } = useUserStore();
+  const router = useRouter();
 
   return (
     <div className="liquid-glass p-6 flex flex-col justify-between h-full relative overflow-hidden group">
@@ -69,7 +71,10 @@ export function CreditWalletCard({ data }: Props) {
         </ResponsiveContainer>
       </div>
 
-      <button className="mt-4 w-full py-2.5 glass-button text-white text-sm font-semibold rounded-xl relative z-10 group-hover:border-cyan-400/30 overflow-hidden">
+      <button 
+        onClick={() => router.push("/dashboard/wallet")}
+        className="mt-4 w-full py-2.5 glass-button text-white text-sm font-semibold rounded-xl relative z-10 group-hover:border-cyan-400/30 overflow-hidden active:scale-[0.98] transition-transform"
+      >
         <span className="relative z-10 drop-shadow-md">View Transactions</span>
         <div className="absolute inset-0 bg-white/5 opacity-0 hover:opacity-100 transition-opacity"></div>
       </button>

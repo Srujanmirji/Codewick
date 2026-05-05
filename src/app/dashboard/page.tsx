@@ -67,10 +67,10 @@ export default function DashboardPage() {
         >
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center liquid-glass-static p-6 rounded-[24px] gap-4">
             <div>
-              <div className="h-9 w-48 bg-white/5 rounded-lg animate-pulse"></div>
-              <div className="h-4 w-64 bg-white/5 rounded-lg animate-pulse mt-2"></div>
+              <div className="h-10 w-64 bg-white/5 rounded-lg animate-pulse"></div>
+              <div className="h-4 w-80 bg-white/5 rounded-lg animate-pulse mt-3"></div>
             </div>
-            <div className="h-10 w-40 bg-white/5 rounded-full animate-pulse border border-white/10"></div>
+            <div className="h-10 w-40 bg-white/5 rounded-full animate-pulse border border-white/10 hidden"></div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -96,13 +96,10 @@ export default function DashboardPage() {
           {/* Header */}
           <motion.div variants={itemVariants} className="flex flex-col md:flex-row justify-between items-start md:items-center liquid-glass-static p-6 rounded-[24px] gap-4">
             <div>
-              <h1 className="text-3xl font-fustat font-bold bg-gradient-to-r from-white via-cyan-100 to-cyan-400 bg-clip-text text-transparent mb-1 drop-shadow-sm">Dashboard</h1>
-              <p className="text-white/65">Welcome back! Here's what's happening with your account.</p>
+              <h1 className="text-4xl font-fustat font-extrabold bg-gradient-to-r from-white via-cyan-300 to-indigo-400 bg-clip-text text-transparent mb-2 drop-shadow-[0_0_15px_rgba(34,213,238,0.3)]">Welcome Fam!! 🚀</h1>
+              <p className="text-white/70 font-medium tracking-wide">You're crushing it today. Ready for your next swap?</p>
             </div>
-            <div className="text-sm text-white/65 flex items-center gap-2 bg-white/5 px-4 py-2 rounded-full border border-white/10 shadow-[inset_0_1px_2px_rgba(255,255,255,0.05)] backdrop-blur-md">
-              <span className="w-2.5 h-2.5 rounded-full bg-cyan-400/80 animate-pulse shadow-[0_0_5px_rgba(34,213,238,0.5)]"></span>
-              Live updating connected
-            </div>
+            <div></div>
           </motion.div>
 
           {/* Top Row */}

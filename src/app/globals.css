@@ -75,7 +75,7 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.14);
     box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
     transition: all 0.2s ease;
-    border-radius: 9999px; /* Capsule Style */
+    border-radius: 20px; /* Modern Rounded Rect */
   }
   .glass-button:hover {
     background: rgba(255, 255, 255, 0.08);

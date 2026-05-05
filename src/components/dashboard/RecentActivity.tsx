@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Activity, Dispute } from "@/lib/api";
 import { MessageSquare, Clock, Star, ShieldAlert, CheckCircle } from "lucide-react";
 
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function RecentActivity({ activities, disputes }: Props) {
+  const router = useRouter();
   const getIcon = (type: string) => {
     switch (type) {
       case 'session': return <MessageSquare className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_3px_rgba(34,213,238,0.3)]" />;
@@ -33,7 +35,12 @@ export function RecentActivity({ activities, disputes }: Props) {
             {disputes.map(d => (
               <div key={d.id} className="flex items-center justify-between text-sm">
                 <span className="text-white/95">{d.title}</span>
-                <button className="text-red-400 hover:text-red-300 hover:drop-shadow-[0_0_3px_rgba(248,113,113,0.3)] underline font-medium transition-all">Resolve</button>
+                <button 
+                  onClick={() => router.push("/dashboard/disputes")}
+                  className="text-red-400 hover:text-red-300 hover:drop-shadow-[0_0_3px_rgba(248,113,113,0.3)] underline font-medium transition-all active:scale-95"
+                >
+                  Resolve
+                </button>
               </div>
             ))}
           </div>
@@ -60,7 +67,10 @@ export function RecentActivity({ activities, disputes }: Props) {
         </div>
       </div>
       
-      <button className="w-full mt-4 pt-4 border-t border-white/10 text-sm text-cyan-400/80 font-medium hover:text-cyan-300 hover:drop-shadow-[0_0_5px_rgba(34,213,238,0.3)] transition-all relative z-10">
+      <button 
+        onClick={() => router.push("/dashboard/sessions")}
+        className="w-full mt-4 pt-4 border-t border-white/10 text-sm text-cyan-400/80 font-medium hover:text-cyan-300 hover:drop-shadow-[0_0_5px_rgba(34,213,238,0.3)] transition-all relative z-10 active:scale-95"
+      >
         View All Activity
       </button>
     </div>

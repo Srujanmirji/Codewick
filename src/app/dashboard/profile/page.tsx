@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { User, Mail, Shield, Star, Edit3, Camera, MapPin, Globe } from "lucide-react";
 import { useUserStore } from "@/store/useUserStore";
+import { useRef } from "react";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -22,9 +23,27 @@ const itemVariants = {
 };
 
 export default function ProfilePage() {
-  const { user } = useUserStore();
+  const { user, updateUser } = useUserStore();
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   if (!user) return null;
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'banner') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        if (type === 'avatar') {
+          updateUser({ avatarUrl: result });
+        } else {
+          updateUser({ bannerUrl: result });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
 
   return (
     <motion.div
@@ -33,35 +52,60 @@ export default function ProfilePage() {
       animate="visible"
       className="flex-1 w-full max-w-5xl mx-auto flex flex-col space-y-6 pb-20"
     >
+      {/* Hidden File Inputs */}
+      <input 
+        type="file" 
+        ref={bannerInputRef} 
+        onChange={(e) => handleFileChange(e, 'banner')} 
+        className="hidden" 
+        accept="image/*"
+      />
+      <input 
+        type="file" 
+        ref={avatarInputRef} 
+        onChange={(e) => handleFileChange(e, 'avatar')} 
+        className="hidden" 
+        accept="image/*"
+      />
+
       {/* Profile Header Card */}
       <motion.div variants={itemVariants} className="liquid-glass relative overflow-hidden">
-        <div className="h-32 bg-gradient-to-r from-cyan-400/20 via-indigo-500/20 to-purple-500/20 w-full relative">
-           <button className="absolute bottom-4 right-4 glass-button px-4 py-2 text-xs font-semibold text-white/95 flex items-center gap-2 backdrop-blur-xl">
+        <div 
+          className="h-32 w-full relative transition-all duration-500 bg-cover bg-center"
+          style={{ 
+            backgroundImage: user.bannerUrl ? `url(${user.bannerUrl})` : 'none'
+          }}
+        >
+          {!user.bannerUrl && <div className="absolute inset-0 bg-gradient-to-r from-cyan-400/20 via-indigo-500/20 to-purple-500/20" />}
+           <button 
+            onClick={() => bannerInputRef.current?.click()}
+            className="absolute top-4 right-4 glass-button px-4 py-2 text-xs font-semibold text-white/95 flex items-center gap-2 backdrop-blur-xl hover:bg-white/10 transition-all z-20"
+           >
              <Edit3 size={14} /> Edit Banner
            </button>
         </div>
         
         <div className="px-8 pb-8">
-          <div className="relative -mt-16 mb-6 flex flex-col md:flex-row items-end md:items-center gap-6">
-            <div className="relative group">
-              <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-[32px] border-4 border-[#1a1c2e] shadow-2xl object-cover" />
-              <button className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[32px] flex items-center justify-center text-white">
-                <Camera size={24} />
-              </button>
-            </div>
-            <div className="flex-1 pb-2">
-              <h1 className="text-3xl font-fustat font-bold text-white/95 flex items-center gap-3">
-                {user.name}
-                <Shield className="w-6 h-6 text-cyan-400" />
-              </h1>
-              <p className="text-white/60 font-medium flex items-center gap-2 mt-1">
-                <Mail size={14} /> {user.email}
-              </p>
-            </div>
-            <div className="flex gap-3 mb-2">
-              <button className="glass-button-primary px-6 py-2.5 text-sm font-semibold text-white/95">
-                Edit Profile
-              </button>
+          <div className="relative -mt-12 mb-6 flex flex-col md:flex-row items-end justify-between gap-6">
+            <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
+              <div className="relative group">
+                <img src={user.avatarUrl} alt={user.name} className="w-32 h-32 rounded-[32px] border-4 border-[#1a1c2e] shadow-2xl object-cover bg-[#1a1c2e]" />
+                <button 
+                  onClick={() => avatarInputRef.current?.click()}
+                  className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity rounded-[32px] flex items-center justify-center text-white"
+                >
+                  <Camera size={24} />
+                </button>
+              </div>
+              <div className="pt-4">
+                <h1 className="text-3xl font-fustat font-bold text-white/95 flex items-center gap-3">
+                  {user.name}
+                  <Shield className="w-6 h-6 text-cyan-400" />
+                </h1>
+                <p className="text-white/60 font-medium flex items-center gap-2 mt-1">
+                  <Mail size={14} /> {user.email}
+                </p>
+              </div>
             </div>
           </div>
 
