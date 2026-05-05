@@ -36,7 +36,8 @@ export function Sidebar() {
   return (
     <motion.aside
       animate={{ width: sidebarOpen ? 260 : 80 }}
-      className="h-full liquid-glass-static flex flex-col relative flex-shrink-0 transition-all duration-300 z-50 overflow-visible"
+      transition={{ type: "spring", stiffness: 150, damping: 20 }}
+      className="h-full liquid-glass-static flex flex-col relative flex-shrink-0 z-50 overflow-visible"
     >
       {/* Toggle Button */}
       <button

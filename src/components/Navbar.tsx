@@ -4,11 +4,18 @@ import { useUserStore } from "@/store/useUserStore";
 import { Search, Bell, ChevronDown, LogOut, Settings as SettingsIcon } from "lucide-react";
 import Image from "next/image";
 
+import { motion } from "framer-motion";
+
 export function Navbar() {
   const { user } = useUserStore();
 
   return (
-    <header className="h-16 liquid-glass-static px-6 flex items-center justify-between z-40">
+    <motion.header 
+      initial={{ y: -20, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ delay: 0.2 }}
+      className="h-16 liquid-glass-static px-6 flex items-center justify-between z-40"
+    >
       
       {/* Search Bar */}
       <div className="relative max-w-md w-full group">
@@ -42,6 +49,6 @@ export function Navbar() {
           <ChevronDown className="w-4 h-4 text-white/40 group-hover:text-cyan-400 transition-colors" />
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useUserStore } from "@/store/useUserStore";
 import { CheckCircle2, Shield, Star, Trophy } from "lucide-react";
+import { motion } from "framer-motion";
 
 export function UserSummaryCard() {
   const { user } = useUserStore();
@@ -32,9 +33,9 @@ export function UserSummaryCard() {
         <div className="flex-1">
           <h2 className="text-xl font-fustat font-bold text-white/95 flex items-center gap-2">
             {user.name}
-            {user.trustLevel === 'Elite' || user.trustLevel === 'Trusted' ? (
+            {(user.trustLevel === 'Elite' || user.trustLevel === 'Trusted') && (
               <CheckCircle2 className="w-5 h-5 text-cyan-400 drop-shadow-[0_0_3px_rgba(34,213,238,0.3)]" />
-            ) : null}
+            )}
           </h2>
           <div className="inline-flex items-center gap-1.5 bg-cyan-400/5 text-cyan-300 px-3 py-1 rounded-full text-xs font-semibold mt-2 border border-white/10 backdrop-blur-md">
             <Shield className="w-3.5 h-3.5" />
@@ -48,20 +49,23 @@ export function UserSummaryCard() {
           <div className="flex justify-between items-end mb-2">
             <span className="text-sm text-white/65 font-inter">Trust Score</span>
             <div className="flex flex-col items-end">
-              <span className="font-bold text-lg text-white/95">{user.trustScore}<span className="text-sm text-white/40 font-normal">/100</span></span>
+              <span className="font-bold text-lg text-white/95">
+                {user.trustScore}
+                <span className="text-sm text-white/40 font-normal">/100</span>
+              </span>
               <span className="text-[10px] text-white/65 font-medium">+2.3% this week</span>
             </div>
           </div>
           <div className="h-2.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/10 relative">
-            <div 
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${user.trustScore}%` }}
+              transition={{ duration: 1, ease: "easeOut", delay: 0.5 }}
               className={`h-full bg-gradient-to-r ${trustColorStr} rounded-full relative overflow-hidden`}
-              style={{ 
-                width: `${user.trustScore}%`,
-                boxShadow: `0 0 12px ${glowColor}`
-              }}
+              style={{ boxShadow: `0 0 12px ${glowColor}` }}
             >
               <div className="absolute inset-0 bg-white/20 w-full h-full animate-[slow-pan_2s_linear_infinite] bg-[length:200%_100%] bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-            </div>
+            </motion.div>
           </div>
         </div>
 

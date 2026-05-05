@@ -23,7 +23,7 @@ export interface Dispute {
 }
 
 export const fetchDashboardData = async () => {
-  await delay(1500); // Simulate network latency
+  await delay(500); // Simulate realistic network latency
 
   return {
     sessions: [
