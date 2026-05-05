@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Fustat, Inter } from "next/font/google";
 import "./globals.css";
 
@@ -14,9 +14,24 @@ const inter = Inter({
   weight: ["400", "500", "600"],
 });
 
+export const viewport: Viewport = {
+  themeColor: "#22d3ee",
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "SkillSwap",
-  description: "Effortlessly manage your projects, collaborate with your team, and achieve your goals with our intuitive task management tool.",
+  description: "Peer-to-peer skill exchange platform built with Liquid Glass UI",
+  appleWebApp: {
+    capable: true,
+    title: "SkillSwap",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    apple: "/icons/icon-192x192.png",
+  },
 };
 
 export default function RootLayout({
