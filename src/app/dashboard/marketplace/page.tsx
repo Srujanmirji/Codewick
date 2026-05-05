@@ -10,16 +10,25 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 }
+    transition: { 
+      staggerChildren: 0.05,
+      delayChildren: 0.1
+    }
   }
 };
 
 const itemVariants = {
-  hidden: { y: 20, opacity: 0 },
+  hidden: { y: 30, opacity: 0, scale: 0.95 },
   visible: {
     y: 0,
     opacity: 1,
-    transition: { type: "spring" as const, stiffness: 100, damping: 15 }
+    scale: 1,
+    transition: { 
+      type: "spring", 
+      stiffness: 80, 
+      damping: 15,
+      mass: 0.8
+    }
   }
 };
 
@@ -119,20 +128,25 @@ export default function MarketplacePage() {
             <motion.div
               key={skill.id}
               layout
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
+              initial="hidden"
+              animate="visible"
               exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
               variants={itemVariants}
-              className="liquid-glass group relative overflow-hidden active:scale-[0.98] transition-transform"
+              whileHover={{ 
+                y: -8,
+                transition: { type: "spring", stiffness: 400, damping: 25 }
+              }}
+              whileTap={{ scale: 0.98 }}
+              className="liquid-glass group relative overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.3),0_0_20px_rgba(34,213,238,0.1)] hover:border-cyan-400/30"
             >
               <div className="p-6">
                 <div className="flex justify-between items-start mb-5">
-                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${skill.color} p-0.5 shadow-xl group-hover:scale-110 transition-transform duration-500`}>
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${skill.color} p-0.5 shadow-xl group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500`}>
                      <div className="w-full h-full rounded-[14px] bg-black/20 backdrop-blur-md flex items-center justify-center text-white font-black text-xl">
                        {skill.title.charAt(0)}
                      </div>
                   </div>
-                  <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 shadow-lg">
+                  <div className="flex items-center gap-1.5 bg-white/5 backdrop-blur-md border border-white/10 px-3 py-1.5 rounded-xl text-xs font-bold text-amber-400 shadow-lg group-hover:border-amber-400/30 transition-colors">
                     <Star size={14} className="fill-amber-400" />
                     {skill.rating}
                   </div>
@@ -151,7 +165,7 @@ export default function MarketplacePage() {
 
                 <div className="flex items-center justify-between pt-5 border-t border-white/10 relative z-10">
                   <div className="flex items-center gap-2 text-white/90">
-                    <div className="p-1.5 rounded-lg bg-cyan-400/10 text-cyan-400">
+                    <div className="p-1.5 rounded-lg bg-cyan-400/10 text-cyan-400 group-hover:bg-cyan-400 group-hover:text-black transition-all duration-300">
                        <Clock size={16} />
                     </div>
                     <span className="text-sm font-bold tracking-tight">{skill.cost}</span>
