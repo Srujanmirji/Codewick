@@ -117,5 +117,5 @@ export async function POST(
     console.error("AI Mediation Error:", error);
     try { require('fs').writeFileSync('d:\\ZEESHAN\\codewick\\Codewick\\error.log', error.stack || error.message); } catch (e) {}
     return NextResponse.json({ error: error.message }, { status: 500 });
-  } }
+  }
 }
