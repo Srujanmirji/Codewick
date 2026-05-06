@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe, Mail, MessageCircle, Share2, Scale, ShieldCheck, Cookie } from "lucide-react";
+import { Scale, ShieldCheck, Cookie } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { Modal } from "./ui/Modal";
@@ -65,20 +65,7 @@ export default function Footer() {
           <p className="font-inter text-gray-600 mb-6 leading-relaxed">
             Experience a new way of exchanging skills. Connect, learn, and grow together with our intelligent and secure peer-to-peer platform.
           </p>
-          <div className="flex items-center gap-4">
-            <a href="#home" className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-600 hover:text-blue-500 hover:bg-white transition-all shadow-sm">
-              <Globe className="w-5 h-5" />
-            </a>
-            <a href="#home" className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-600 hover:text-blue-500 hover:bg-white transition-all shadow-sm">
-              <Mail className="w-5 h-5" />
-            </a>
-            <a href="#home" className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-600 hover:text-blue-500 hover:bg-white transition-all shadow-sm">
-              <MessageCircle className="w-5 h-5" />
-            </a>
-            <a href="#home" className="w-10 h-10 rounded-full bg-white/60 flex items-center justify-center text-gray-600 hover:text-blue-500 hover:bg-white transition-all shadow-sm">
-              <Share2 className="w-5 h-5" />
-            </a>
-          </div>
+
         </div>
 
         {/* Links */}
