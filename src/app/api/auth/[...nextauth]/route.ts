@@ -36,22 +36,13 @@ export const authOptions: NextAuthOptions = {
           throw new Error("Invalid credentials");
         }
 
-        const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || [];
-        const isExplicitAdmin = adminEmails.includes(user.email.toLowerCase());
-
-        // Update admin status if email is in the list
-        if (isExplicitAdmin && !user.isAdmin) {
-          user.isAdmin = true;
-          await user.save();
-        }
-
         return {
           id: user._id.toString(),
           name: user.name,
           email: user.email,
           image: user.image,
           onboardingComplete: user.onboardingComplete,
-          isAdmin: user.isAdmin || isExplicitAdmin,
+          isAdmin: user.isAdmin,
         };
       }
     })
@@ -63,34 +54,34 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         try {
           const existingUser = await User.findOne({ email: { $regex: new RegExp(`^${user.email}$`, 'i') } });
-          const adminEmails = process.env.ADMIN_EMAILS?.split(",").map(e => e.trim().toLowerCase()) || [];
-          const isExplicitAdmin = user.email ? adminEmails.includes(user.email.toLowerCase()) : false;
-
+          
           if (!existingUser) {
+            const isAdminEmail = process.env.ADMIN_EMAIL && user.email?.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
             const newUser = await User.create({
               name: user.name,
               email: user.email,
               image: user.image,
               onboardingComplete: false,
-              isAdmin: isExplicitAdmin,
+              isAdmin: !!isAdminEmail,
             });
-            // Attach DB id and onboarding status to the user object for JWT
             (user as any).id = newUser._id.toString();
             (user as any).onboardingComplete = false;
-            (user as any).isAdmin = isExplicitAdmin;
+            (user as any).isAdmin = !!isAdminEmail;
           } else {
-            // Update admin status if email is in the list
-            if (isExplicitAdmin && !existingUser.isAdmin) {
+            // Check if existing user should be promoted to admin based on env var
+            const isAdminEmail = process.env.ADMIN_EMAIL && existingUser.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
+            if (isAdminEmail && !existingUser.isAdmin) {
               existingUser.isAdmin = true;
-              await existingUser.save();
             }
+
             if (user.image && existingUser.image !== user.image) {
               existingUser.image = user.image;
-              await existingUser.save();
             }
+            
+            await existingUser.save();
             (user as any).id = existingUser._id.toString();
             (user as any).onboardingComplete = existingUser.onboardingComplete;
-            (user as any).isAdmin = existingUser.isAdmin || isExplicitAdmin;
+            (user as any).isAdmin = existingUser.isAdmin;
           }
           return true;
         } catch (error) {
