@@ -5,8 +5,10 @@ import connectDB from '@/lib/db';
 import Question from '@/models/Question';
 import User from '@/models/User';
 import Transaction from '@/models/Transaction';
+import Notification from '@/models/Notification';
+import Message from '@/models/Message';
 
-export async function POST(request: Request, { params }: { params: { id: string } }) {
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     await connectDB();
     const session = await getServerSession(authOptions);
@@ -16,8 +18,9 @@ export async function POST(request: Request, { params }: { params: { id: string 
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const { answerId } = await request.json();
+    const { id } = await params;
 
-    const question = await Question.findById(params.id);
+    const question = await Question.findById(id);
     if (!question) return NextResponse.json({ error: 'Question not found' }, { status: 404 });
 
     if (question.author.toString() !== user._id.toString()) {
@@ -54,6 +57,26 @@ export async function POST(request: Request, { params }: { params: { id: string 
     }
 
     await question.save();
+
+    // Create Notification & Message for the solver
+    if (answer.author.toString() !== user._id.toString()) {
+      await Notification.create({
+        userId: answer.author,
+        title: "Bounty Awarded! 🏆",
+        type: "system",
+        message: `Your answer was accepted! You earned a ${question.bounty} TC bounty on "${question.title}".`,
+        read: false
+      });
+
+      const conversationId = [user._id.toString(), answer.author.toString()].sort().join('_');
+      await Message.create({
+        conversationId,
+        senderId: user._id,
+        receiverId: answer.author,
+        text: `🏆 I accepted your answer to my question "${question.title}"! The ${question.bounty} TC bounty has been credited to your wallet. Thank you!`,
+        type: 'system'
+      });
+    }
 
     return NextResponse.json({ success: true, question });
   } catch (error: any) {

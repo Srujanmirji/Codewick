@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, CheckCircle, Clock } from "lucide-react";
 import { toast } from "@/store/useToastStore";
 
-export default function QuestionDetailPage({ params }: { params: { id: string } }) {
+export default function QuestionDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = use(params);
   const { data: session } = useSession();
   const router = useRouter();
   const [question, setQuestion] = useState<any>(null);
@@ -16,11 +17,11 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
 
   useEffect(() => {
     fetchQuestion();
-  }, [params.id]);
+  }, [id]);
 
   const fetchQuestion = async () => {
     try {
-      const res = await fetch(`/api/community/questions/${params.id}`);
+      const res = await fetch(`/api/community/questions/${id}`);
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setQuestion(data);
@@ -38,7 +39,7 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
 
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/community/questions/${params.id}/answers`, {
+      const res = await fetch(`/api/community/questions/${id}/answers`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ content: answerContent })
@@ -59,7 +60,7 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
   const handleResolve = async (answerId: string) => {
     if (!confirm("Are you sure this answer solved your problem? The bounty will be awarded to them.")) return;
     try {
-      const res = await fetch(`/api/community/questions/${params.id}/resolve`, {
+      const res = await fetch(`/api/community/questions/${id}/resolve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answerId })
