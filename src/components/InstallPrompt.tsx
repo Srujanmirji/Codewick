@@ -9,12 +9,17 @@ export function InstallPrompt() {
   const [isInstallable, setIsInstallable] = useState(false);
   const [isInstalled, setIsInstalled] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     // Check if iOS
     const userAgent = window.navigator.userAgent.toLowerCase();
     const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
     setIsIOS(isIOSDevice);
+    
+    // Check if Mobile
+    const isMobileDevice = /android|webos|blackberry|iemobile|opera mini/.test(userAgent);
+    setIsMobile(isMobileDevice);
 
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
@@ -70,7 +75,6 @@ export function InstallPrompt() {
   }
 
   // For Android/Chrome/Other Mobile browsers
-  const isMobile = /android|webos|blackberry|iemobile|opera mini/.test(window.navigator.userAgent.toLowerCase());
 
   if (isMobile || isInstallable) {
     return (
