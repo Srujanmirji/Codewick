@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Search, Send, Plus, MoreVertical, Paperclip, Smile, ArrowRightLeft, CheckCircle2, XCircle, Loader2, Clock } from "lucide-react";
+import { MessageSquare, Search, Send, Plus, MoreVertical, Paperclip, Smile, ArrowRightLeft, CheckCircle2, XCircle, Loader2, Clock, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { toast } from "@/store/useToastStore";
@@ -34,6 +34,7 @@ export default function MessagesPage() {
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [sending, setSending] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showMobileChat, setShowMobileChat] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const activeConversation = conversations.find(c => c.conversationId === activeConversationId);
@@ -226,10 +227,16 @@ export default function MessagesPage() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="flex-1 h-[calc(100vh-140px)] w-full max-w-7xl mx-auto flex gap-6 pb-4"
+      className="flex-1 h-[calc(100vh-140px)] w-full max-w-7xl mx-auto flex flex-col md:flex-row gap-6 pb-4"
     >
       {/* Sidebar - Chats List */}
-      <motion.div variants={itemVariants} className="w-80 liquid-glass flex flex-col overflow-hidden border-r border-white/5">
+      <motion.div 
+        variants={itemVariants} 
+        className={cn(
+          "w-full md:w-80 liquid-glass flex flex-col overflow-hidden border-r border-white/5",
+          showMobileChat ? "hidden md:flex" : "flex"
+        )}
+      >
         <div className="p-5 border-b border-white/10">
           <div className="flex justify-between items-center mb-5">
             <h1 className="text-xl font-fustat font-black text-white/95 tracking-tight">Messages</h1>
@@ -263,7 +270,10 @@ export default function MessagesPage() {
               return (
                 <div 
                   key={chat.conversationId} 
-                  onClick={() => setActiveConversationId(chat.conversationId)}
+                  onClick={() => {
+                    setActiveConversationId(chat.conversationId);
+                    setShowMobileChat(true);
+                  }}
                   className={cn(
                     "p-4 flex items-center gap-4 cursor-pointer transition-all relative group",
                     isActive ? "bg-white/10" : "hover:bg-white/5"
@@ -298,7 +308,13 @@ export default function MessagesPage() {
       </motion.div>
 
       {/* Main Chat Area */}
-      <motion.div variants={itemVariants} className="flex-1 liquid-glass flex flex-col overflow-hidden relative">
+      <motion.div 
+        variants={itemVariants} 
+        className={cn(
+          "flex-1 liquid-glass flex flex-col overflow-hidden relative",
+          !showMobileChat ? "hidden md:flex" : "flex"
+        )}
+      >
         {!activeConversationId ? (
           <div className="flex-1 flex flex-col items-center justify-center text-center px-8">
             <div className="w-20 h-20 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-4">
@@ -320,14 +336,22 @@ export default function MessagesPage() {
               className="flex flex-col h-full"
             >
               {/* Chat Header */}
-              <div className="p-5 border-b border-white/10 flex items-center justify-between bg-white/2 backdrop-blur-md relative z-10">
-                <div className="flex items-center gap-4">
+              <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/2 backdrop-blur-md relative z-10">
+                <div className="flex items-center gap-3 sm:gap-4">
+                  {/* Mobile Back Button */}
+                  <button 
+                    onClick={() => setShowMobileChat(false)}
+                    className="md:hidden p-2 -ml-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
+                  >
+                    <ArrowLeft size={20} />
+                  </button>
+                  
                   <div className="relative">
-                    <img src={activeConversation?.partner?.avatar} alt={activeConversation?.partner?.name} className="w-10 h-10 rounded-full border border-white/10 object-cover bg-black/20" />
+                    <img src={activeConversation?.partner?.avatar} alt={activeConversation?.partner?.name} className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-white/10 object-cover bg-black/20" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-white/95">{activeConversation?.partner?.name}</h3>
-                    <p className="text-[10px] font-medium text-white/30">SkillSwap Partner</p>
+                    <h3 className="text-xs sm:text-sm font-bold text-white/95">{activeConversation?.partner?.name}</h3>
+                    <p className="text-[9px] sm:text-[10px] font-medium text-white/30">SkillSwap Partner</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">

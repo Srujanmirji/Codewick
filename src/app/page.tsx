@@ -60,10 +60,10 @@ function ScrollSection({ children, className = "", id }: { children: React.React
   return (
     <motion.section
       id={id}
-      initial={{ opacity: 0, y: 60 }}
+      initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] }}
       className={className}
     >
       {children}
@@ -94,9 +94,9 @@ export default function Home() {
       {/* Background Gradient Glows */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
         <div className="absolute top-0 -left-[10%] w-[50%] h-[800px] bg-[#60B1FF] rounded-full mix-blend-multiply filter blur-[150px] opacity-40 animate-blob"></div>
-        <div className="absolute top-[10%] left-[20%] w-[40%] h-[600px] bg-[#319AFF] rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-blob animation-delay-2000"></div>
+        <div className="hidden sm:block absolute top-[10%] left-[20%] w-[40%] h-[600px] bg-[#319AFF] rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-blob animation-delay-2000"></div>
         <div className="absolute top-[35%] -right-[10%] w-[45%] h-[700px] bg-[#60B1FF] rounded-full mix-blend-multiply filter blur-[150px] opacity-25 animate-blob"></div>
-        <div className="absolute top-[60%] left-[5%] w-[40%] h-[800px] bg-[#319AFF] rounded-full mix-blend-multiply filter blur-[150px] opacity-20 animate-blob animation-delay-2000"></div>
+        <div className="hidden md:block absolute top-[60%] left-[5%] w-[40%] h-[800px] bg-[#319AFF] rounded-full mix-blend-multiply filter blur-[150px] opacity-20 animate-blob animation-delay-2000"></div>
         <div className="absolute bottom-[5%] right-[10%] w-[50%] h-[700px] bg-[#60B1FF] rounded-full mix-blend-multiply filter blur-[150px] opacity-30 animate-blob"></div>
       </div>
 
@@ -160,24 +160,13 @@ export default function Home() {
         </motion.header>
 
         {/* ── Hero Section with Parallax ── */}
-        <div className="flex-1 flex flex-col lg:flex-row items-center justify-between mt-12 lg:mt-20 gap-12">
+        <div id="home" className="flex-1 flex flex-col lg:flex-row items-center justify-between mt-12 lg:mt-20 gap-12 scroll-mt-32">
           
           {/* Left Column: Parallax Content */}
           <motion.div 
             style={{ y: heroParallaxY, opacity: heroOpacity }}
             className="w-full lg:w-[55%] flex flex-col items-center lg:items-start text-center lg:text-left z-20"
           >
-            {/* Pill Badge */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex items-center gap-2 bg-blue-50 border border-blue-100 px-4 py-1.5 rounded-full mb-6"
-            >
-              <Sparkles className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-semibold text-blue-600">The #1 Skill Exchange Platform</span>
-            </motion.div>
-
             {/* Headline — word-by-word reveal */}
             <h1 className="font-black text-[42px] sm:text-[64px] lg:text-[88px] leading-[1.1] lg:leading-[1] tracking-[-2px] lg:tracking-[-3px] text-[#111827] mb-8">
               <RevealText>Work smarter,</RevealText>
@@ -213,11 +202,12 @@ export default function Home() {
           {/* Right Column: Parallax Orb */}
           <motion.div 
             style={{ scale: orbScale, opacity: orbOpacity }}
-            className="w-full lg:w-[45%] relative h-[300px] sm:h-[450px] lg:h-[600px] flex items-center justify-center pointer-events-none mt-8 lg:mt-0"
+            className="w-full lg:w-[45%] relative h-[250px] sm:h-[450px] lg:h-[600px] flex items-center justify-center pointer-events-none mt-8 lg:mt-0"
           >
-            <div className="absolute inset-0 bg-blue-500/20 blur-[100px] sm:blur-[150px] rounded-full scale-75 animate-pulse"></div>
+            <div className="absolute inset-0 bg-blue-500/20 blur-[80px] sm:blur-[150px] rounded-full scale-75 animate-pulse"></div>
             <video 
               autoPlay loop muted playsInline 
+              preload="metadata"
               className="absolute w-[160%] lg:w-[140%] h-[160%] lg:h-[140%] object-contain mix-blend-multiply opacity-90 scale-110 lg:scale-125"
               style={{ filter: "hue-rotate(-55deg) saturate(200%) brightness(1.1) contrast(1.1)" }}
             >
@@ -227,31 +217,7 @@ export default function Home() {
           </motion.div>
         </div>
 
-        {/* ── Social Proof Stats Bar ── */}
-        <ScrollSection className="w-full mt-16 sm:mt-24 z-20">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-10 max-w-4xl mx-auto text-center">
-            {[
-              { value: 12000, suffix: "+", label: "Active Users" },
-              { value: 95, suffix: "%", label: "Match Rate" },
-              { value: 48000, suffix: "+", label: "Skills Swapped" },
-              { value: 4.9, suffix: "★", label: "User Rating" },
-            ].map((stat, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.12 }}
-                className="flex flex-col items-center"
-              >
-                <span className="text-3xl sm:text-4xl font-black text-[#111827] mb-1">
-                  {stat.value < 100 ? <AnimatedCounter target={stat.value} suffix={stat.suffix} /> : <AnimatedCounter target={stat.value} suffix={stat.suffix} />}
-                </span>
-                <span className="text-sm text-[#6B7280] font-medium">{stat.label}</span>
-              </motion.div>
-            ))}
-          </div>
-        </ScrollSection>
+
 
 
         {/* ── Features Section ── */}
@@ -423,8 +389,8 @@ export default function Home() {
               <div>
                 <span className="font-bold text-sm uppercase tracking-wider text-blue-600 bg-blue-50 px-3 py-1 rounded-full">Pro</span>
                 <div className="mt-6 flex items-baseline">
-                  <span className="text-5xl font-extrabold tracking-tight text-gray-900">₹999</span>
-                  <span className="ml-1 text-xl font-semibold text-gray-500">/month</span>
+                  <span className="text-5xl font-extrabold tracking-tight text-gray-900">₹1,999</span>
+                  <span className="ml-1 text-xl font-semibold text-gray-500">/year</span>
                 </div>
                 <p className="mt-4 text-gray-600 text-sm">Unlock unlimited potential and high-priority matching.</p>
                 <div className="mt-8 border-t border-gray-100 pt-8">

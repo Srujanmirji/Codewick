@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { signIn } from "next-auth/react";
 import { Eye, EyeOff, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,13 @@ export default function SignupPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isExiting, setIsExiting] = useState(false);
+
+  const handleGoHome = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsExiting(true);
+    setTimeout(() => router.push("/"), 600);
+  };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +60,16 @@ export default function SignupPage() {
   };
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden bg-black selection:bg-blue-500/30 flex items-center justify-center">
+    <AnimatePresence>
+    <motion.main
+      initial={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+      animate={isExiting 
+        ? { opacity: 0, scale: 0.95, filter: "blur(8px)" } 
+        : { opacity: 1, scale: 1, filter: "blur(0px)" }
+      }
+      transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+      className="relative min-h-screen w-full overflow-hidden bg-black selection:bg-blue-500/30 flex items-center justify-center"
+    >
       {/* Background Video */}
       <video
         autoPlay
@@ -78,7 +94,7 @@ export default function SignupPage() {
           className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-20"
         >
           <Link href="/" className="flex items-center gap-3 mb-8 group">
-            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl bg-white/10 backdrop-blur-sm border border-white/20 group-hover:border-blue-400/50 transition-all">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl bg-white/10 backdrop-blur-sm border border-white/20 group-hover:border-blue-400/50 group-hover:scale-110 transition-all duration-300">
               <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <span className="font-fustat font-bold text-3xl md:text-4xl tracking-tight text-white group-hover:text-blue-400 transition-colors">
@@ -218,6 +234,7 @@ export default function SignupPage() {
           </div>
         </motion.div>
       </div>
-    </main>
+    </motion.main>
+    </AnimatePresence>
   );
 }

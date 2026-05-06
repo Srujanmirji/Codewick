@@ -38,7 +38,7 @@ export default withAuth(
       return null;
     }
 
-    if (isAuthPage || isHomePage) {
+    if (isAuthPage) {
       if (isAuth) {
         if (token.onboardingComplete) {
           return NextResponse.redirect(new URL("/dashboard", req.url));
@@ -46,6 +46,10 @@ export default withAuth(
           return NextResponse.redirect(new URL("/onboarding", req.url));
         }
       }
+      return null;
+    }
+
+    if (isHomePage) {
       return null;
     }
 

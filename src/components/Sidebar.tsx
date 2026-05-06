@@ -88,8 +88,8 @@ export function Sidebar() {
     <>
       {/* Logo */}
       <div className="h-20 md:h-24 flex items-center px-[22px] overflow-hidden">
-        <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.3)] border border-white/10 p-0.5">
+        <Link href="/" className="flex items-center gap-3 group">
+          <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.3)] border border-white/10 p-0.5 group-hover:scale-105 transition-transform">
             <img src="/logo.png" alt="SkillSwap Logo" className="w-full h-full object-cover rounded-xl" />
           </div>
           <AnimatePresence mode="wait">
@@ -99,13 +99,13 @@ export function Sidebar() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
-                className="font-fustat font-black text-2xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] whitespace-nowrap tracking-tighter"
+                className="font-fustat font-black text-2xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] whitespace-nowrap tracking-tighter group-hover:text-cyan-400 transition-colors"
               >
                 SkillSwap
               </motion.span>
             )}
           </AnimatePresence>
-        </div>
+        </Link>
 
         {/* Mobile close button */}
         {isMobile && (
