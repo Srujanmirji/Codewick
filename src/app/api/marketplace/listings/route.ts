@@ -4,14 +4,26 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import connectDB from '@/lib/db';
 import SkillListing from '@/models/SkillListing';
 import User from '@/models/User';
+import { redisCache } from '@/lib/redis';
 
 export async function GET(request: Request) {
   try {
-    await connectDB();
-    const session = await getServerSession(authOptions);
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('q');
-    const category = searchParams.get('category');
+    const query = searchParams.get('q') || '';
+    const category = searchParams.get('category') || '';
+    const session = await getServerSession(authOptions);
+    const userEmail = session?.user?.email || 'guest';
+
+    // 1. Check Cache First
+    const cacheKey = `marketplace:${userEmail}:q=${query}:c=${category}`;
+    const cachedListings = await redisCache.get(cacheKey);
+    if (cachedListings) {
+      console.log(`[CACHE HIT] Marketplace: ${cacheKey}`);
+      return NextResponse.json(cachedListings);
+    }
+    console.log(`[CACHE MISS] Marketplace: ${cacheKey}`);
+
+    await connectDB();
 
     let filter: any = { status: 'open' };
     
@@ -23,7 +35,7 @@ export async function GET(request: Request) {
       }
     }
 
-    // Category filter — match by category field OR by skill/description keywords
+    // Category filter
     if (category && category !== 'All Skills') {
       const categoryKeywords: Record<string, string[]> = {
         'Design': ['design', 'ui', 'ux', 'figma', 'graphic', 'logo', 'illustration', 'photoshop', 'css', 'tailwind', 'branding', 'wireframe'],
@@ -52,7 +64,6 @@ export async function GET(request: Request) {
         { description: { $regex: query, $options: 'i' } }
       ];
 
-      // If we already have $or from category, combine with $and
       if (filter.$or) {
         const categoryOr = filter.$or;
         delete filter.$or;
@@ -68,6 +79,9 @@ export async function GET(request: Request) {
     const listings = await SkillListing.find(filter)
       .populate('userId', 'name avatarUrl trustScore')
       .sort({ createdAt: -1 });
+
+    // 2. Save to Cache for 60 seconds
+    await redisCache.set(cacheKey, listings, 60);
 
     return NextResponse.json(listings);
   } catch (error: any) {
@@ -96,6 +110,9 @@ export async function POST(request: Request) {
       userId: user._id,
       status: 'open'
     });
+
+    // 3. Invalidate Marketplace Cache globally
+    await redisCache.delByPrefix('marketplace:');
 
     return NextResponse.json(listing);
   } catch (error: any) {
