@@ -26,6 +26,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Modal } from "./ui/Modal";
+import { InstallPrompt } from "./InstallPrompt";
 
 const NAV_ITEMS = [
   { name: "Dashboard", icon: Home, href: "/dashboard" },
@@ -119,46 +120,58 @@ export function Sidebar() {
       </div>
 
       {/* Nav Links */}
-      <div className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1.5 custom-scrollbar">
-        {items.map((item) => {
-          const isActive = pathname === item.href;
-          return (
-            <Link key={item.name} href={item.href}>
-              <div
-                className={cn(
-                  "flex items-center gap-4 px-3 py-3.5 rounded-2xl transition-all duration-300 group relative cursor-pointer",
-                  isActive 
-                    ? "text-cyan-400 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10" 
-                    : "text-white/50 hover:bg-white/5 hover:text-white/90"
-                )}
-                title={!sidebarOpen && !isMobile ? item.name : undefined}
-              >
-                {isActive && (
-                  <motion.div 
-                    layoutId="active-pill"
-                    className="absolute left-1 w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,213,238,0.8)]"
-                  ></motion.div>
-                )}
-                <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300 ml-1", isActive ? "drop-shadow-[0_0_10px_rgba(34,213,238,0.5)]" : "group-hover:text-white/90")} />
-                
-                <AnimatePresence mode="wait">
-                  {(sidebarOpen || isMobile) && (
-                    <motion.span 
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      transition={{ duration: 0.2, delay: 0.05 }}
-                      className="font-inter font-semibold whitespace-nowrap text-sm"
-                    >
-                      {item.name}
-                    </motion.span>
+        <div className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1.5 custom-scrollbar">
+          {items.map((item) => {
+            const isActive = pathname === item.href;
+            return (
+              <Link key={item.name} href={item.href}>
+                <div
+                  className={cn(
+                    "flex items-center gap-4 px-3 py-3.5 rounded-2xl transition-all duration-300 group relative cursor-pointer",
+                    isActive 
+                      ? "text-cyan-400 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10" 
+                      : "text-white/50 hover:bg-white/5 hover:text-white/90"
                   )}
-                </AnimatePresence>
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+                  title={!sidebarOpen && !isMobile ? item.name : undefined}
+                >
+                  {isActive && (
+                    <motion.div 
+                      layoutId="active-pill"
+                      className="absolute left-1 w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,213,238,0.8)]"
+                    ></motion.div>
+                  )}
+                  <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300 ml-1", isActive ? "drop-shadow-[0_0_10px_rgba(34,213,238,0.5)]" : "group-hover:text-white/90")} />
+                  
+                  <AnimatePresence mode="wait">
+                    {(sidebarOpen || isMobile) && (
+                      <motion.span 
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10 }}
+                        transition={{ duration: 0.2, delay: 0.05 }}
+                        className="font-inter font-semibold whitespace-nowrap text-sm"
+                      >
+                        {item.name}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+              </Link>
+            );
+          })}
+
+          <AnimatePresence>
+            {(sidebarOpen || isMobile) && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+              >
+                <InstallPrompt />
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
       {/* User Section / Logout */}
       <div className="p-4 mt-auto border-t border-white/10 bg-white/2">

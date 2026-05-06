@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import Footer from "@/components/Footer";
 import Link from "next/link";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { motion, AnimatePresence, useScroll, useTransform, useInView, useMotionValueEvent } from "framer-motion";
 
 /* ── Animated Counter ── */
@@ -149,6 +150,9 @@ export default function Home() {
                 <Link onClick={() => setIsMobileMenuOpen(false)} href="#features" className="text-lg font-bold text-[#111827] px-4 py-2 hover:bg-blue-50 rounded-xl transition-colors">Features</Link>
                 <Link onClick={() => setIsMobileMenuOpen(false)} href="#how-it-works" className="text-lg font-bold text-[#111827] px-4 py-2 hover:bg-blue-50 rounded-xl transition-colors">How It Works</Link>
                 <Link onClick={() => setIsMobileMenuOpen(false)} href="#pricing" className="text-lg font-bold text-[#111827] px-4 py-2 hover:bg-blue-50 rounded-xl transition-colors">Pricing</Link>
+                <div className="px-2">
+                  <InstallPrompt />
+                </div>
                 <hr className="border-black/5 my-2" />
                 <Link onClick={() => setIsMobileMenuOpen(false)} href="/login" className="flex items-center justify-center gap-2 bg-[#3B82F6] text-white px-6 py-4 rounded-2xl text-lg font-bold shadow-lg shadow-blue-500/20">
                   Login Now
