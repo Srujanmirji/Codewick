@@ -21,6 +21,10 @@ export function InstallPrompt() {
     const isMobileDevice = /android|webos|blackberry|iemobile|opera mini/.test(userAgent);
     setIsMobile(isMobileDevice);
 
+    // Check if other mobile
+    const isOtherMobile = /android|webos|blackberry|iemobile|opera mini/.test(userAgent);
+    setIsMobile(isOtherMobile);
+
     // Check if already installed
     if (window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone) {
       setIsInstalled(true);
@@ -75,6 +79,7 @@ export function InstallPrompt() {
   }
 
   // For Android/Chrome/Other Mobile browsers
+
 
   if (isMobile || isInstallable) {
     return (
