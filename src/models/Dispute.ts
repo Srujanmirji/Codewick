@@ -10,9 +10,11 @@ export interface IDispute extends Document {
   counterResponse?: string; // Accused party's response
   counterEvidenceUrls?: string[]; // Accused party's evidence
   respondedAt?: Date;
-  status: 'open' | 'awaiting-response' | 'under-review' | 'resolved';
+  status: 'open' | 'awaiting-response' | 'under-review' | 'resolved' | 'escalated';
   resolution?: string;
   creditRefund: number;
+  aiConfidence?: 'high' | 'medium' | 'low';
+  responseDeadline?: Date;
   createdAt: Date;
   resolvedAt?: Date;
 }
@@ -29,11 +31,13 @@ const DisputeSchema: Schema = new Schema({
   respondedAt: { type: Date },
   status: { 
     type: String, 
-    enum: ['open', 'awaiting-response', 'under-review', 'resolved'], 
+    enum: ['open', 'awaiting-response', 'under-review', 'resolved', 'escalated'], 
     default: 'open' 
   },
   resolution: { type: String },
   creditRefund: { type: Number, default: 0 },
+  aiConfidence: { type: String, enum: ['high', 'medium', 'low'] },
+  responseDeadline: { type: Date },
   createdAt: { type: Date, default: Date.now },
   resolvedAt: { type: Date },
 });

@@ -30,9 +30,27 @@ export async function notifyDisputeFiled(
     userId: accusedUserId,
     type: 'dispute-filed',
     title: '⚠️ Dispute Filed Against You',
-    message: `A dispute has been filed: "${reason}". Please submit your counter-response before AI mediation proceeds.`,
+    message: `A dispute has been filed: "${reason}". You have 48 hours to submit your counter-response before AI mediation proceeds automatically.`,
     metadata: { disputeId },
   });
+}
+
+export async function notifyDisputeEscalated(
+  disputeId: string,
+  reason: string
+) {
+  const User = (await import('@/models/User')).default;
+  const admins = await User.find({ isAdmin: true });
+  
+  for (const admin of admins) {
+    await Notification.create({
+      userId: admin._id.toString(),
+      type: 'dispute-escalated',
+      title: '🚨 Dispute Escalated — Admin Review Needed',
+      message: `AI confidence too low to auto-resolve. Reason: "${reason}". Please review manually.`,
+      metadata: { disputeId },
+    });
+  }
 }
 
 export async function notifyDisputeResolved(

@@ -20,7 +20,8 @@ import {
   AlertCircle,
   LayoutGrid,
   CloudUpload,
-  ShieldAlert
+  ShieldAlert,
+  ClipboardList
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -30,6 +31,7 @@ import { Modal } from "./ui/Modal";
 const NAV_ITEMS = [
   { name: "Dashboard", icon: Home, href: "/dashboard" },
   { name: "My Sessions", icon: CalendarCheck, href: "/dashboard/sessions" },
+  { name: "My Listings", icon: ClipboardList, href: "/dashboard/my-listings" },
   { name: "Marketplace", icon: Store, href: "/dashboard/marketplace" },
   { name: "Community", icon: Users, href: "/dashboard/community" },
   { name: "Host Hub", icon: LayoutGrid, href: "/dashboard/host" },

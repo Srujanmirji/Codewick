@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       reason,
       evidence,
       evidenceUrls: validUrls,
+      responseDeadline: new Date(Date.now() + 48 * 60 * 60 * 1000), // 48h from now
       status: 'awaiting-response' // Wait for accused to respond first
     });
 

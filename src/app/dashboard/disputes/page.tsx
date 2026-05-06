@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon, Loader2, Cpu, CheckCircle2, Plus } from "lucide-react";
+import { AlertTriangle, ShieldCheck, History, Info, ChevronRight, MessageSquare, Send, FileText, User as UserIcon, Loader2, Cpu, CheckCircle2, Plus, Clock, ShieldAlert } from "lucide-react";
 import { Modal } from "@/components/ui/Modal";
 import { cn } from "@/lib/utils";
 import { toast } from "@/store/useToastStore";
@@ -102,13 +102,17 @@ export default function DisputesPage() {
     toast.info("AI Mediator is analyzing your case...");
     try {
       const res = await fetch(`/api/disputes/${id}/resolve`, { method: 'POST' });
+      if (!res.ok) {
+         const text = await res.text();
+         throw new Error(`Server returned ${res.status}: ${text.substring(0, 50)}`);
+      }
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       
       toast.success("AI Verdict Issued: " + data.resolution.verdict);
       fetchDisputes();
-    } catch (error) {
-      toast.error("AI mediation failed. Please try again.");
+    } catch (error: any) {
+      toast.error(error.message || "AI mediation failed. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,27 +169,39 @@ export default function DisputesPage() {
                 <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
                   <div className="flex items-center gap-5 w-full md:w-auto">
                     <div className={cn(
-                      "w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10",
-                      dispute.status === 'resolved' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-amber-400/10 text-amber-400'
+                      "w-12 h-12 rounded-2xl flex items-center justify-center border border-white/10 flex-shrink-0",
+                      dispute.status === 'resolved' ? 'bg-emerald-400/10 text-emerald-400' : 
+                      dispute.status === 'escalated' ? 'bg-red-500/10 text-red-500' :
+                      'bg-amber-400/10 text-amber-400'
                     )}>
-                      {dispute.status === 'resolved' ? <ShieldCheck size={24} /> : <AlertTriangle size={24} />}
+                      {dispute.status === 'resolved' ? <ShieldCheck size={24} /> : 
+                       dispute.status === 'escalated' ? <ShieldAlert size={24} /> : 
+                       <AlertTriangle size={24} />}
                     </div>
                     <div>
                       <h3 className="text-lg font-bold text-white/95 group-hover:text-amber-400 transition-colors">{dispute.reason}</h3>
-                      <div className="flex items-center gap-3 text-sm text-white/40 mt-1">
+                      <div className="flex items-center gap-3 text-sm text-white/40 mt-1 flex-wrap">
                         <span>Against {dispute.filedAgainst?.name}</span>
                         <span>•</span>
                         <span>{new Date(dispute.createdAt).toLocaleDateString()}</span>
+                        {dispute.status === 'awaiting-response' && dispute.responseDeadline && (
+                          <span className="flex items-center gap-1 text-amber-400/80 bg-amber-400/10 px-2 py-0.5 rounded-full text-xs">
+                            <Clock size={12} />
+                            {Math.max(0, Math.floor((new Date(dispute.responseDeadline).getTime() - Date.now()) / (1000 * 60 * 60)))}h left
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4">
+                  <div className="flex flex-col items-end gap-2">
                     <span className={cn(
                       "text-[10px] uppercase tracking-widest font-bold px-2 py-0.5 rounded-md border",
-                      dispute.status === 'resolved' ? 'text-emerald-400 border-emerald-400/20' : 'text-amber-400 border-amber-400/20'
+                      dispute.status === 'resolved' ? 'text-emerald-400 border-emerald-400/20 bg-emerald-400/5' : 
+                      dispute.status === 'escalated' ? 'text-red-400 border-red-400/20 bg-red-400/5' :
+                      'text-amber-400 border-amber-400/20 bg-amber-400/5'
                     )}>
-                      {dispute.status}
+                      {dispute.status === 'escalated' ? 'Escalated to Admin' : dispute.status}
                     </span>
                     {dispute.status === 'open' && (
                       <button 
@@ -206,26 +222,54 @@ export default function DisputesPage() {
                 </div>
 
                 {/* AI Verdict UI */}
-                {dispute.status === 'resolved' && (
+                {(dispute.status === 'resolved' || dispute.status === 'escalated') && dispute.resolution && (
                   <motion.div 
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="p-5 rounded-2xl bg-cyan-400/5 border border-cyan-400/20 shadow-[0_0_40px_rgba(34,213,238,0.05)]"
+                    className={cn(
+                      "p-5 rounded-2xl border shadow-lg",
+                      dispute.status === 'escalated' 
+                        ? "bg-red-500/5 border-red-500/20 shadow-[0_0_40px_rgba(239,68,68,0.05)]"
+                        : "bg-cyan-400/5 border-cyan-400/20 shadow-[0_0_40px_rgba(34,213,238,0.05)]"
+                    )}
                   >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="p-2 rounded-lg bg-cyan-400/20 text-cyan-400">
-                        <Cpu size={18} />
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-3">
+                        <div className={cn(
+                          "p-2 rounded-lg",
+                          dispute.status === 'escalated' ? "bg-red-500/20 text-red-400" : "bg-cyan-400/20 text-cyan-400"
+                        )}>
+                          <Cpu size={18} />
+                        </div>
+                        <span className={cn(
+                          "text-sm font-black uppercase tracking-tighter",
+                          dispute.status === 'escalated' ? "text-red-400" : "text-cyan-400"
+                        )}>
+                          AI Mediator Verdict
+                        </span>
                       </div>
-                      <span className="text-sm font-black text-cyan-400 uppercase tracking-tighter">AI Mediator Verdict</span>
+                      
+                      {dispute.aiConfidence && (
+                        <span className={cn(
+                          "text-[10px] uppercase tracking-widest font-bold px-2 py-1 rounded-md flex items-center gap-1",
+                          dispute.aiConfidence === 'high' ? 'bg-emerald-400/10 text-emerald-400' :
+                          dispute.aiConfidence === 'medium' ? 'bg-yellow-400/10 text-yellow-400' :
+                          'bg-red-400/10 text-red-400'
+                        )}>
+                          Confidence: {dispute.aiConfidence}
+                        </span>
+                      )}
                     </div>
                     <p className="text-sm text-white/90 leading-relaxed mb-4">
                       {dispute.resolution}
                     </p>
-                    <div className="flex gap-4">
-                       <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-                          <CheckCircle2 size={14} /> Refund: {dispute.creditRefund} Credits
-                       </div>
-                    </div>
+                    {dispute.status === 'resolved' && (
+                      <div className="flex gap-4">
+                         <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+                            <CheckCircle2 size={14} /> Refund: {dispute.creditRefund} Credits
+                         </div>
+                      </div>
+                    )}
                   </motion.div>
                 )}
               </motion.div>
