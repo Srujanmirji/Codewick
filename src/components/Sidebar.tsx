@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSession, signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { motion, AnimatePresence } from "framer-motion";
@@ -44,6 +44,7 @@ export function Sidebar() {
   const { sidebarOpen, toggleSidebar, user } = useUserStore();
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = useSession();
@@ -52,6 +53,22 @@ export function Sidebar() {
   const items = isAdmin 
     ? [...NAV_ITEMS, { name: "God Mode", icon: ShieldAlert, href: "/dashboard/admin" }] 
     : NAV_ITEMS;
+
+  // Detect mobile viewport
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Close sidebar on route change (mobile only)
+  useEffect(() => {
+    if (isMobile && sidebarOpen) {
+      toggleSidebar();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const handleLogout = () => {
     setIsLogoutModalOpen(true);
@@ -66,6 +83,131 @@ export function Sidebar() {
       await signOut({ callbackUrl: "/" });
     }, 1500);
   };
+
+  const sidebarContent = (
+    <>
+      {/* Logo */}
+      <div className="h-20 md:h-24 flex items-center px-[22px] overflow-hidden">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.3)] border border-white/10 p-0.5">
+            <img src="/logo.png" alt="SkillSwap Logo" className="w-full h-full object-cover rounded-xl" />
+          </div>
+          <AnimatePresence mode="wait">
+            {(sidebarOpen || isMobile) && (
+              <motion.span 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.2 }}
+                className="font-fustat font-black text-2xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] whitespace-nowrap tracking-tighter"
+              >
+                SkillSwap
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Mobile close button */}
+        {isMobile && (
+          <button
+            onClick={toggleSidebar}
+            className="ml-auto p-2 rounded-xl text-white/40 hover:text-white hover:bg-white/10 transition-all"
+          >
+            <X size={22} />
+          </button>
+        )}
+      </div>
+
+      {/* Nav Links */}
+      <div className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1.5 custom-scrollbar">
+        {items.map((item) => {
+          const isActive = pathname === item.href;
+          return (
+            <Link key={item.name} href={item.href}>
+              <div
+                className={cn(
+                  "flex items-center gap-4 px-3 py-3.5 rounded-2xl transition-all duration-300 group relative cursor-pointer",
+                  isActive 
+                    ? "text-cyan-400 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10" 
+                    : "text-white/50 hover:bg-white/5 hover:text-white/90"
+                )}
+                title={!sidebarOpen && !isMobile ? item.name : undefined}
+              >
+                {isActive && (
+                  <motion.div 
+                    layoutId="active-pill"
+                    className="absolute left-1 w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,213,238,0.8)]"
+                  ></motion.div>
+                )}
+                <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300 ml-1", isActive ? "drop-shadow-[0_0_10px_rgba(34,213,238,0.5)]" : "group-hover:text-white/90")} />
+                
+                <AnimatePresence mode="wait">
+                  {(sidebarOpen || isMobile) && (
+                    <motion.span 
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      transition={{ duration: 0.2, delay: 0.05 }}
+                      className="font-inter font-semibold whitespace-nowrap text-sm"
+                    >
+                      {item.name}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* User Section / Logout */}
+      <div className="p-4 mt-auto border-t border-white/10 bg-white/2">
+        <div className={cn(
+          "flex items-center gap-3 p-2 rounded-2xl transition-all duration-300",
+          (sidebarOpen || isMobile) ? "bg-white/5 border border-white/5" : "justify-center"
+        )}>
+          <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 flex-shrink-0 shadow-lg">
+            <img src={user?.avatarUrl} alt="User" className="w-full h-full object-cover" />
+          </div>
+          
+          <AnimatePresence>
+            {(sidebarOpen || isMobile) && (
+              <motion.div 
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: "auto" }}
+                exit={{ opacity: 0, width: 0 }}
+                className="flex-1 min-w-0"
+              >
+                <p className="text-xs font-bold text-white/90 truncate">{user?.name}</p>
+                <p className="text-[10px] text-white/40 truncate">{user?.trustLevel} Level</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <button 
+            onClick={handleLogout}
+            className={cn(
+              "p-2 rounded-xl text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all",
+              !sidebarOpen && !isMobile && "hidden"
+            )}
+            title="Logout"
+          >
+            <LogOut size={18} />
+          </button>
+        </div>
+        
+        {!sidebarOpen && !isMobile && (
+          <button 
+            onClick={handleLogout}
+            className="mt-2 w-10 h-10 flex items-center justify-center rounded-full text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all mx-auto"
+            title="Logout"
+          >
+            <LogOut size={20} />
+          </button>
+        )}
+      </div>
+    </>
+  );
 
   return (
     <>
@@ -82,7 +224,7 @@ export function Sidebar() {
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: [0.5, 1.2, 1], opacity: 1 }}
               transition={{ duration: 1, ease: "easeOut" }}
-              className="relative w-96 h-96"
+              className="relative w-64 h-64 sm:w-96 sm:h-96"
             >
               <div className="absolute inset-0 bg-blue-500/20 blur-[100px] rounded-full animate-pulse"></div>
               <video 
@@ -111,141 +253,64 @@ export function Sidebar() {
           </motion.div>
         )}
       </AnimatePresence>
-      <motion.aside
-        initial={false}
-        animate={{ width: sidebarOpen ? 260 : 85 }}
-        transition={{ type: "spring", stiffness: 200, damping: 25 }}
-        className="h-full liquid-glass-static flex flex-col relative flex-shrink-0 z-50 border-r border-white/10"
-      >
-        {/* Toggle Button - Improved Look */}
-        <button
-          onClick={toggleSidebar}
-          className={cn(
-            "absolute -right-4 top-10 w-8 h-8 flex items-center justify-center rounded-full z-50 transition-all shadow-xl",
-            "bg-[#0f172a] border border-white/20 text-white/70 hover:text-cyan-400 hover:border-cyan-400/50",
-            "before:absolute before:inset-0 before:rounded-full before:bg-cyan-400/20 before:blur-md before:opacity-0 hover:before:opacity-100 before:transition-opacity"
+
+      {/* ===== MOBILE: Drawer Sidebar ===== */}
+      {isMobile && (
+        <AnimatePresence>
+          {sidebarOpen && (
+            <>
+              {/* Backdrop overlay */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={toggleSidebar}
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
+              />
+              {/* Drawer */}
+              <motion.aside
+                initial={{ x: -280 }}
+                animate={{ x: 0 }}
+                exit={{ x: -280 }}
+                transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                className="fixed top-0 left-0 h-full w-[280px] liquid-glass-static flex flex-col z-[100] border-r border-white/10 bg-[#0a0e1a]/95"
+              >
+                {sidebarContent}
+              </motion.aside>
+            </>
           )}
+        </AnimatePresence>
+      )}
+
+      {/* ===== DESKTOP: Persistent Sidebar ===== */}
+      {!isMobile && (
+        <motion.aside
+          initial={false}
+          animate={{ width: sidebarOpen ? 260 : 85 }}
+          transition={{ type: "spring", stiffness: 200, damping: 25 }}
+          className="h-full liquid-glass-static flex-col relative flex-shrink-0 z-50 border-r border-white/10 hidden md:flex"
         >
-          <motion.div
-            animate={{ rotate: sidebarOpen ? 0 : 180 }}
-            transition={{ duration: 0.3 }}
-            className="relative z-10"
+          {/* Toggle Button */}
+          <button
+            onClick={toggleSidebar}
+            className={cn(
+              "absolute -right-4 top-10 w-8 h-8 flex items-center justify-center rounded-full z-50 transition-all shadow-xl",
+              "bg-[#0f172a] border border-white/20 text-white/70 hover:text-cyan-400 hover:border-cyan-400/50",
+              "before:absolute before:inset-0 before:rounded-full before:bg-cyan-400/20 before:blur-md before:opacity-0 hover:before:opacity-100 before:transition-opacity"
+            )}
           >
-            <ChevronLeft size={18} />
-          </motion.div>
-        </button>
-
-        {/* Logo */}
-        <div className="h-24 flex items-center px-[22px] overflow-hidden">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-2xl overflow-hidden flex items-center justify-center flex-shrink-0 shadow-[0_0_20px_rgba(34,213,238,0.3)] border border-white/10 p-0.5">
-              <img src="/logo.png" alt="SkillSwap Logo" className="w-full h-full object-cover rounded-xl" />
-            </div>
-            <AnimatePresence mode="wait">
-              {sidebarOpen && (
-                <motion.span 
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -10 }}
-                  transition={{ duration: 0.2 }}
-                  className="font-fustat font-black text-2xl text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.3)] whitespace-nowrap tracking-tighter"
-                >
-                  SkillSwap
-                </motion.span>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* Nav Links */}
-        <div className="flex-1 overflow-y-auto py-2 px-3 flex flex-col gap-1.5 custom-scrollbar">
-          {items.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link key={item.name} href={item.href}>
-                <div
-                  className={cn(
-                    "flex items-center gap-4 px-3 py-3.5 rounded-2xl transition-all duration-300 group relative cursor-pointer",
-                    isActive 
-                      ? "text-cyan-400 bg-white/5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)] border border-white/10" 
-                      : "text-white/50 hover:bg-white/5 hover:text-white/90"
-                  )}
-                  title={!sidebarOpen ? item.name : undefined}
-                >
-                  {isActive && (
-                    <motion.div 
-                      layoutId="active-pill"
-                      className="absolute left-1 w-1 h-6 bg-cyan-400 rounded-full shadow-[0_0_15px_rgba(34,213,238,0.8)]"
-                    ></motion.div>
-                  )}
-                  <item.icon size={22} className={cn("flex-shrink-0 transition-all duration-300 ml-1", isActive ? "drop-shadow-[0_0_10px_rgba(34,213,238,0.5)]" : "group-hover:text-white/90")} />
-                  
-                  <AnimatePresence mode="wait">
-                    {sidebarOpen && (
-                      <motion.span 
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -10 }}
-                        transition={{ duration: 0.2, delay: 0.05 }}
-                        className="font-inter font-semibold whitespace-nowrap text-sm"
-                      >
-                        {item.name}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* User Section / Logout */}
-        <div className="p-4 mt-auto border-t border-white/10 bg-white/2">
-          <div className={cn(
-            "flex items-center gap-3 p-2 rounded-2xl transition-all duration-300",
-            sidebarOpen ? "bg-white/5 border border-white/5" : "justify-center"
-          )}>
-            <div className="w-10 h-10 rounded-full overflow-hidden border border-white/10 flex-shrink-0 shadow-lg">
-              <img src={user?.avatarUrl} alt="User" className="w-full h-full object-cover" />
-            </div>
-            
-            <AnimatePresence>
-              {sidebarOpen && (
-                <motion.div 
-                  initial={{ opacity: 0, width: 0 }}
-                  animate={{ opacity: 1, width: "auto" }}
-                  exit={{ opacity: 0, width: 0 }}
-                  className="flex-1 min-w-0"
-                >
-                  <p className="text-xs font-bold text-white/90 truncate">{user?.name}</p>
-                  <p className="text-[10px] text-white/40 truncate">{user?.trustLevel} Level</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <button 
-              onClick={handleLogout}
-              className={cn(
-                "p-2 rounded-xl text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all",
-                !sidebarOpen && "hidden"
-              )}
-              title="Logout"
+            <motion.div
+              animate={{ rotate: sidebarOpen ? 0 : 180 }}
+              transition={{ duration: 0.3 }}
+              className="relative z-10"
             >
-              <LogOut size={18} />
-            </button>
-          </div>
-          
-          {!sidebarOpen && (
-            <button 
-              onClick={handleLogout}
-              className="mt-2 w-10 h-10 flex items-center justify-center rounded-full text-white/40 hover:text-red-400 hover:bg-red-400/10 transition-all mx-auto"
-              title="Logout"
-            >
-              <LogOut size={20} />
-            </button>
-          )}
-        </div>
-      </motion.aside>
+              <ChevronLeft size={18} />
+            </motion.div>
+          </button>
+
+          {sidebarContent}
+        </motion.aside>
+      )}
 
       {/* Logout Confirmation Modal */}
       <Modal

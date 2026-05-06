@@ -58,7 +58,7 @@ export default function LoginPage() {
       {/* Dark Overlay to ensure text readability against the video */}
       <div className="absolute inset-0 bg-black/50 z-0 backdrop-blur-[2px]"></div>
       
-      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between min-h-screen py-12 gap-12 lg:gap-0">
+      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-12 flex flex-col lg:flex-row items-center justify-between min-h-screen py-8 sm:py-12 gap-8 lg:gap-0">
         
         {/* LEFT SIDE: Branding Panel */}
         <motion.div 
@@ -67,15 +67,20 @@ export default function LoginPage() {
           transition={{ duration: 0.6, ease: "easeOut" }}
           className="w-full lg:w-1/2 flex flex-col items-center lg:items-start text-center lg:text-left z-20"
         >
-          <Link href="/" className="font-fustat font-bold text-4xl tracking-tight text-white mb-8 hover:text-blue-400 transition-colors">
-            SkillSwap
+          <Link href="/" className="flex items-center gap-3 mb-8 group">
+            <div className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center overflow-hidden shadow-2xl bg-white/10 backdrop-blur-sm border border-white/20 group-hover:border-blue-400/50 transition-all">
+              <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+            </div>
+            <span className="font-fustat font-bold text-3xl md:text-4xl tracking-tight text-white group-hover:text-blue-400 transition-colors">
+              SkillSwap
+            </span>
           </Link>
           
-          <h1 className="font-fustat font-bold text-[48px] sm:text-[56px] leading-[1.1] tracking-[-1px] text-white mb-6 max-w-lg drop-shadow-md">
+          <h1 className="font-fustat font-bold text-[36px] sm:text-[48px] lg:text-[56px] leading-[1.1] tracking-[-1px] text-white mb-4 sm:mb-6 max-w-lg drop-shadow-md">
             Exchange skills.<br className="hidden lg:block"/> Earn time.
           </h1>
           
-          <p className="font-inter text-[18px] leading-relaxed text-gray-300 mb-10 max-w-md drop-shadow">
+          <p className="font-inter text-base sm:text-[18px] leading-relaxed text-gray-300 mb-6 sm:mb-10 max-w-md drop-shadow">
             Join a trusted skill-sharing network. Connect with experts, learn new abilities, and share what you know.
           </p>
         </motion.div>
@@ -87,7 +92,7 @@ export default function LoginPage() {
           transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
           className="w-full lg:w-[480px] z-20"
         >
-          <div className="relative bg-black/40 backdrop-blur-[30px] border border-white/10 rounded-[24px] p-8 sm:p-10 shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden group/card">
+          <div className="relative bg-black/40 backdrop-blur-[30px] border border-white/10 rounded-[20px] sm:rounded-[24px] p-6 sm:p-8 md:p-10 shadow-[0_24px_60px_rgba(0,0,0,0.6)] overflow-hidden group/card">
             {/* Subtle floating light reflection for dark card */}
             <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-gradient-to-r from-transparent via-white/5 to-transparent -skew-x-12 group-hover/card:translate-x-[400%] transition-transform duration-1500 ease-out pointer-events-none z-10"></div>
 

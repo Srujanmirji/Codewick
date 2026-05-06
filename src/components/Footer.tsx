@@ -3,8 +3,8 @@ import Link from "next/link";
 
 export default function Footer() {
   return (
-    <footer className="w-full bg-white/40 backdrop-blur-[25px] border-t border-white/60 mt-20 pt-16 pb-8 px-6 lg:px-12 z-20 relative shadow-[0_-8px_30px_rgb(0,0,0,0.02)]">
-      <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row justify-between gap-12">
+    <footer className="w-full bg-white/40 backdrop-blur-[25px] border-t border-white/60 mt-12 sm:mt-20 pt-10 sm:pt-16 pb-8 px-6 lg:px-12 z-20 relative shadow-[0_-8px_30px_rgb(0,0,0,0.02)]">
+      <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row justify-between gap-8 lg:gap-12">
         {/* Brand and Description */}
         <div className="flex flex-col items-start max-w-sm">
           <span className="font-fustat font-bold text-2xl tracking-tight text-gray-900 mb-4">SkillSwap</span>
@@ -28,7 +28,7 @@ export default function Footer() {
         </div>
 
         {/* Links */}
-        <div className="flex flex-wrap gap-16 md:gap-24">
+        <div className="flex flex-wrap gap-10 sm:gap-16 md:gap-24">
           <div className="flex flex-col gap-4">
             <h4 className="font-inter font-bold text-gray-900 mb-2">Product</h4>
             <Link href="#" className="font-inter text-gray-600 hover:text-blue-500 transition-colors">Features</Link>
