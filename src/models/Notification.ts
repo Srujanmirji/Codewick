@@ -20,7 +20,7 @@ const NotificationSchema: Schema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
   type: { 
     type: String, 
-    enum: ['trust-change', 'dispute-filed', 'dispute-resolved', 'session-completed', 'match-found', 'system'],
+    enum: ['trust-change', 'dispute-filed', 'dispute-resolved', 'session-completed', 'match-found', 'system', 'community-reply', 'community-resolved'],
     required: true 
   },
   title: { type: String, required: true },

@@ -160,14 +160,19 @@ export default function CommunityPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-6 shrink-0 border-l border-white/10 pl-6 h-full">
+                  <div className="flex items-center gap-6 shrink-0 border-l border-white/10 pl-6 h-full min-w-[140px] justify-between">
                     <div className="flex flex-col items-center">
                       <span className="text-2xl font-bold text-white/80">{q.answers?.length || 0}</span>
-                      <span className="text-xs text-white/40">Answers</span>
+                      <span className="text-xs text-white/40 uppercase tracking-tighter font-black">Answers</span>
                     </div>
+                    
+                    <button className="bg-white/5 hover:bg-white/10 text-cyan-400 p-2.5 rounded-xl border border-white/10 transition-all group-hover:border-cyan-500/30">
+                      <MessageCircle size={20} />
+                    </button>
+
                     <div className="flex flex-col items-center gap-1">
                       <img src={q.author?.image || `https://api.dicebear.com/7.x/avataaars/svg?seed=${q.author?.name}`} alt="" className="w-10 h-10 rounded-full border border-white/20" />
-                      <span className="text-xs text-white/50 w-20 truncate text-center">{q.author?.name}</span>
+                      <span className="text-xs text-white/50 w-16 truncate text-center font-medium">{q.author?.name}</span>
                     </div>
                   </div>
                 </motion.div>

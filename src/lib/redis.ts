@@ -1,7 +1,20 @@
 import Redis from 'ioredis';
 
 // Connect to Railway Redis (or fallback to an empty string if missing)
-const redis = new Redis(process.env.REDIS_URL || '');
+const redis = new Redis(process.env.REDIS_URL || '', {
+  maxRetriesPerRequest: 1,
+  lazyConnect: true,
+  retryStrategy: (times) => {
+    if (times > 3) return null; // stop retrying after 3 attempts
+    return Math.min(times * 50, 2000);
+  }
+});
+
+// Handle connection errors gracefully to prevent crashing
+redis.on('error', (err) => {
+  // console.warn('Redis connection error:', err.message);
+});
+
 
 export const redisCache = {
   // Get an item from Redis and parse it back to JSON

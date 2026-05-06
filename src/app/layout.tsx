@@ -43,6 +43,7 @@ export default function RootLayout({
     <html lang="en" className={`${fustat.variable} ${inter.variable} h-full antialiased scroll-smooth`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-inter" suppressHydrationWarning>
         <Providers>{children}</Providers>
+        <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
       </body>
     </html>
   );

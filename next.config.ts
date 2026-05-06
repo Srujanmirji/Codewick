@@ -14,9 +14,10 @@ const withPWA = withPWAInit({
 });
 
 const nextConfig: NextConfig = {
-  turbopack: {},
-  eslint: {
-    ignoreDuringBuilds: true,
+  experimental: {
+    turbopack: {
+      root: ".",
+    },
   },
   typescript: {
     ignoreBuildErrors: true,

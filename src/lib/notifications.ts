@@ -82,3 +82,17 @@ export async function notifySessionCompleted(
     metadata: { sessionId, changeAmount: creditsEarned },
   });
 }
+export async function notifyCommunityReply(
+  userId: string,
+  questionId: string,
+  questionTitle: string,
+  replierName: string
+) {
+  await Notification.create({
+    userId,
+    type: 'community-reply',
+    title: '💬 New Reply on Your Question',
+    message: `${replierName} just replied to your question: "${questionTitle}"`,
+    metadata: { questionId },
+  });
+}

@@ -78,10 +78,57 @@ export default function HostHubPage() {
     toast.success("Work removed from your hub.");
   };
 
-  const handleSelectPlan = (planName: string) => {
-    toast.success(`Welcome to the ${planName} plan! Your limits have been updated.`);
-    setIsPlansModalOpen(false);
+  const handleSelectPlan = async (planName: string) => {
+    const amount = planName === "Pro" ? 1999 : 499;
+    
+    setLoading(true);
+    try {
+      // 1. Create order on the server
+      const response = await fetch('/api/razorpay/order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount }),
+      });
+      
+      const order = await response.json();
+      
+      if (order.error) throw new Error(order.error);
+
+      // 2. Initialize Razorpay options
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || 'rzp_test_SlxeAxGll53qqE',
+        amount: order.amount,
+        currency: order.currency,
+        name: "SkillSwap Pro",
+        description: `Upgrade to ${planName} Plan`,
+        order_id: order.id,
+        handler: function (response: any) {
+          // 3. Handle payment success
+          toast.success(`Payment Successful! Transaction ID: ${response.razorpay_payment_id}`);
+          setIsPlansModalOpen(false);
+          // Here you would typically verify the payment on the server and update user status
+        },
+        prefill: {
+          name: "User Name",
+          email: "user@example.com",
+        },
+        theme: {
+          color: "#22d3ee",
+        },
+      };
+
+      const rzp = new (window as any).Razorpay(options);
+      rzp.open();
+
+    } catch (error: any) {
+      console.error("Payment failed:", error);
+      toast.error(error.message || "Payment initialization failed");
+    } finally {
+      setLoading(false);
+    }
   };
+
+  const [loading, setLoading] = useState(false);
 
   return (
     <>
@@ -266,9 +313,10 @@ export default function HostHubPage() {
             </ul>
             <button 
               onClick={() => handleSelectPlan("Starter")}
-              className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 transition-all active:scale-95"
+              disabled={loading}
+              className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-white font-bold hover:bg-white/10 transition-all active:scale-95 disabled:opacity-50"
             >
-              Choose Starter
+              {loading ? "Processing..." : "Choose Starter"}
             </button>
           </div>
 
@@ -295,9 +343,11 @@ export default function HostHubPage() {
             </ul>
             <button 
               onClick={() => handleSelectPlan("Pro")}
-              className="w-full py-3 bg-cyan-400 text-black rounded-xl font-bold hover:shadow-[0_0_20px_rgba(34,213,238,0.3)] transition-all active:scale-95"
+              disabled={loading}
+              className="w-full py-3 bg-cyan-400 text-black rounded-xl font-bold hover:shadow-[0_0_20px_rgba(34,213,238,0.3)] transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
             >
-              Choose Pro
+              {loading && <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />}
+              {loading ? "Initializing..." : "Choose Pro"}
             </button>
           </div>
         </div>

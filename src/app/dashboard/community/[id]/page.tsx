@@ -169,7 +169,7 @@ export default function QuestionDetailPage({ params }: { params: { id: string } 
       </div>
 
       {/* Post Answer Form */}
-      {question.status === 'open' && !isAuthor && (
+      {question.status === 'open' && (
         <div className="liquid-glass-static p-6 rounded-[24px] mt-8">
           <h3 className="text-lg font-bold text-white mb-4">Submit an Answer</h3>
           <form onSubmit={handlePostAnswer}>

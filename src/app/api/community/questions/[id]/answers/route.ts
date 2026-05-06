@@ -31,6 +31,17 @@ export async function POST(request: Request, { params }: { params: { id: string 
 
     await question.save();
 
+    // Notify the question author (if it's not the author replying to themselves)
+    if (question.author.toString() !== user._id.toString()) {
+      const { notifyCommunityReply } = await import('@/lib/notifications');
+      await notifyCommunityReply(
+        question.author.toString(),
+        question._id.toString(),
+        question.title,
+        user.name
+      );
+    }
+
     return NextResponse.json({ success: true, question });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
