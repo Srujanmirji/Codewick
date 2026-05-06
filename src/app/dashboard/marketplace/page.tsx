@@ -66,8 +66,8 @@ export default function MarketplacePage() {
 
   const fetchListings = async () => {
     try {
-      const categoryParam = activeCategory !== 'All Skills' ? `&category=${activeCategory}` : '';
-      const res = await fetch(`/api/marketplace/listings?q=${searchQuery}${categoryParam}`);
+      const categoryParam = activeCategory !== 'All Skills' ? `&category=${encodeURIComponent(activeCategory)}` : '';
+      const res = await fetch(`/api/marketplace/listings?q=${encodeURIComponent(searchQuery)}${categoryParam}`);
       const data = await res.json();
       setListings(data);
     } catch (error) {

@@ -133,11 +133,11 @@ export default function DashboardLayout({
         className="absolute inset-0 w-full h-full object-cover z-0 opacity-40 mix-blend-screen pointer-events-none"
       />
 
-      <div className="z-10 flex h-full w-full p-6 gap-6">
+      <div className="z-10 flex h-full w-full p-4 md:p-6 gap-4 md:gap-6">
         <Sidebar />
-        <div className="flex flex-col flex-1 overflow-hidden gap-6">
+        <div className="flex flex-col flex-1 min-w-0 overflow-hidden gap-4 md:gap-6">
           <Navbar />
-          <main className="flex-1 overflow-y-auto pb-12 custom-scrollbar pr-4">
+          <main className="flex-1 overflow-y-auto pb-12 custom-scrollbar pr-2 md:pr-4">
             {children}
           </main>
         </div>

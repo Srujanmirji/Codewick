@@ -17,9 +17,9 @@ const data = [
 ];
 
 const CREDIT_PACKS = [
-  { id: 'starter', name: 'Starter Pack', credits: 5, price: '$9.99', icon: Zap, color: 'from-cyan-400 to-blue-500' },
-  { id: 'pro', name: 'Pro Pack', credits: 15, price: '$24.99', icon: ShieldCheck, color: 'from-indigo-400 to-purple-500', popular: true },
-  { id: 'elite', name: 'Elite Pack', credits: 50, price: '$69.99', icon: CreditCard, color: 'from-amber-400 to-orange-500' },
+  { id: 'starter', name: 'Starter Pack', credits: 5, price: '₹499', icon: Zap, color: 'from-cyan-400 to-blue-500' },
+  { id: 'pro', name: 'Pro Pack', credits: 15, price: '₹1,499', icon: ShieldCheck, color: 'from-indigo-400 to-purple-500', popular: true },
+  { id: 'elite', name: 'Elite Pack', credits: 50, price: '₹4,999', icon: CreditCard, color: 'from-amber-400 to-orange-500' },
 ];
 
 const containerVariants = {

@@ -54,23 +54,31 @@ export const authOptions: NextAuthOptions = {
         await connectToDatabase();
         try {
           const existingUser = await User.findOne({ email: { $regex: new RegExp(`^${user.email}$`, 'i') } });
+          
           if (!existingUser) {
+            const isAdminEmail = process.env.ADMIN_EMAIL && user.email?.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
             const newUser = await User.create({
               name: user.name,
               email: user.email,
               image: user.image,
               onboardingComplete: false,
-              isAdmin: false,
+              isAdmin: !!isAdminEmail,
             });
-            // Attach DB id and onboarding status to the user object for JWT
             (user as any).id = newUser._id.toString();
             (user as any).onboardingComplete = false;
-            (user as any).isAdmin = false;
+            (user as any).isAdmin = !!isAdminEmail;
           } else {
+            // Check if existing user should be promoted to admin based on env var
+            const isAdminEmail = process.env.ADMIN_EMAIL && existingUser.email.toLowerCase() === process.env.ADMIN_EMAIL.toLowerCase();
+            if (isAdminEmail && !existingUser.isAdmin) {
+              existingUser.isAdmin = true;
+            }
+
             if (user.image && existingUser.image !== user.image) {
               existingUser.image = user.image;
-              await existingUser.save();
             }
+            
+            await existingUser.save();
             (user as any).id = existingUser._id.toString();
             (user as any).onboardingComplete = existingUser.onboardingComplete;
             (user as any).isAdmin = existingUser.isAdmin;

@@ -1,14 +1,14 @@
-import type { MetadataRoute } from 'next';
-
+import { MetadataRoute } from 'next'
+ 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'SkillSwap Dashboard',
+    name: 'SkillSwap',
     short_name: 'SkillSwap',
-    description: 'Peer-to-peer skill exchange platform built with Liquid Glass UI',
+    description: 'Peer-to-peer skill exchange platform',
     start_url: '/',
     display: 'standalone',
-    background_color: '#0f172a',
-    theme_color: '#22d3ee',
+    background_color: '#000000',
+    theme_color: '#3B82F6',
     icons: [
       {
         src: '/icons/icon-192x192.png',
@@ -20,12 +20,6 @@ export default function manifest(): MetadataRoute.Manifest {
         sizes: '512x512',
         type: 'image/png',
       },
-      {
-        src: '/icons/icon-maskable-512x512.png',
-        sizes: '512x512',
-        type: 'image/png',
-        purpose: 'maskable',
-      },
     ],
-  };
+  }
 }
