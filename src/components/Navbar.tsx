@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef } from "react";
 import { Search, Bell, ChevronDown, Menu, Loader2, User as UserIcon, Store, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
+import { formatDistanceToNow } from "date-fns";
 
 export function Navbar() {
   const { user, toggleSidebar } = useUserStore();
@@ -14,17 +14,62 @@ export function Navbar() {
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [showResults, setShowResults] = useState(false);
+  
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
+  
   const searchRef = useRef<HTMLDivElement>(null);
+  const notifRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
         setShowResults(false);
       }
+      if (notifRef.current && !notifRef.current.contains(event.target as Node)) {
+        setShowNotifications(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await fetch('/api/notifications');
+      const data = await res.json();
+      if (!data.error) {
+        setNotifications(data.notifications || []);
+        setUnreadCount(data.unreadCount || 0);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (user) {
+      fetchNotifications();
+      // Optional polling every minute
+      const interval = setInterval(fetchNotifications, 60000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const markAllAsRead = async () => {
+    try {
+      await fetch('/api/notifications', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      setUnreadCount(0);
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (e) {
+      console.error(e);
+    }
+  };
 
   useEffect(() => {
     if (searchQuery.length < 2) {
@@ -144,10 +189,73 @@ export function Navbar() {
       {/* Right Actions */}
       <div className="flex items-center gap-3 md:gap-6 flex-shrink-0">
         {/* Notifications */}
-        <button className="relative text-white/40 hover:text-cyan-400 hover:drop-shadow-[0_0_5px_rgba(34,213,238,0.3)] transition-all p-2 rounded-full glass-button">
-          <Bell className="w-5 h-5" />
-          <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-cyan-400 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,213,238,0.8)]"></span>
-        </button>
+        <div ref={notifRef} className="relative">
+          <button 
+            onClick={() => setShowNotifications(!showNotifications)}
+            className="relative text-white/40 hover:text-cyan-400 hover:drop-shadow-[0_0_5px_rgba(34,213,238,0.3)] transition-all p-2 rounded-full glass-button"
+          >
+            <Bell className="w-5 h-5" />
+            {unreadCount > 0 && (
+              <span className="absolute top-0 right-0 w-4 h-4 bg-red-500 flex items-center justify-center text-[9px] font-black text-white rounded-full shadow-[0_0_8px_rgba(239,68,68,0.8)] ring-2 ring-[#0a0e1a]">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+          </button>
+
+          <AnimatePresence>
+            {showNotifications && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                className="absolute top-full right-0 mt-3 w-[320px] md:w-[380px] bg-[#0f172a]/95 backdrop-blur-2xl border border-white/10 rounded-[24px] shadow-[0_20px_50px_rgba(0,0,0,0.5)] overflow-hidden z-50 origin-top-right"
+              >
+                <div className="p-4 flex items-center justify-between border-b border-white/5 bg-white/5">
+                  <h3 className="font-bold text-white flex items-center gap-2">
+                    Notifications
+                    {unreadCount > 0 && <span className="bg-cyan-400/20 text-cyan-400 text-[10px] px-2 py-0.5 rounded-full">{unreadCount} New</span>}
+                  </h3>
+                  {unreadCount > 0 && (
+                    <button onClick={markAllAsRead} className="text-xs text-cyan-400 hover:text-cyan-300 font-semibold transition-colors">
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-[380px] overflow-y-auto custom-scrollbar">
+                  {notifications.length > 0 ? (
+                    notifications.map((notif) => (
+                      <div 
+                        key={notif._id} 
+                        className={`p-4 border-b border-white/5 hover:bg-white/5 transition-colors flex gap-4 ${!notif.read ? 'bg-cyan-400/5' : ''}`}
+                      >
+                        <div className="mt-1">
+                          {!notif.read && <div className="w-2 h-2 rounded-full bg-cyan-400 shadow-[0_0_8px_rgba(34,213,238,0.6)]" />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${!notif.read ? 'text-white font-semibold' : 'text-white/70'} leading-relaxed`}>
+                            {notif.message}
+                          </p>
+                          <p className="text-[10px] text-white/30 mt-1 uppercase tracking-wider font-bold">
+                            {formatDistanceToNow(new Date(notif.createdAt), { addSuffix: true })}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="p-8 text-center flex flex-col items-center">
+                      <div className="w-12 h-12 rounded-full bg-white/5 flex items-center justify-center text-white/20 mb-3">
+                        <Bell size={20} />
+                      </div>
+                      <p className="text-sm font-semibold text-white/40">You're all caught up!</p>
+                      <p className="text-xs text-white/20 mt-1">No new notifications</p>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
 
         {/* Profile Dropdown */}
         <div className="flex items-center gap-2 md:gap-3 cursor-pointer group px-1 py-1 rounded-2xl transition-all">
